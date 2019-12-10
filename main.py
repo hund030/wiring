@@ -17,7 +17,7 @@ Bend_Radius = 5.0
 Delta_Arc = 0.001
 
 def main() -> None:
-    df = create_sim_space(File_Name, Save_Folder)
+    df = create_sim_space(File_Name, Save_Folder, Line_Width, Dist)
     df_rect = plotter_rect(df, Line_Width, Dist, Save_Folder)
     svg2dwgscr_rect(df_rect, "fiberBoard896rect.scr", Save_Folder)
     # df_bend = plotter_bend(df_rect, Line_Width, Dist, Bend_Radius, Delta_Arc, Save_Folder)
