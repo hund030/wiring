@@ -96,22 +96,30 @@ def plotter_bend(df_rect: pd.DataFrame, line_width: float, dist: float, bend_rad
     ax.set_xlabel('x')
     ax.set_ylabel('y')
 
-    for i in range(df.shape[0]):
-        x_list = [df["inflection_x"][i][0]] + df['bend_x'][i] + [df["inflection_x"][i][-1]]
-        y_list = [df["inflection_y"][i][0]] + df['bend_y'][i] + [df["inflection_y"][i][-1]]
-        dir_list = df["dir"][i]
-        theta_list = [theta_map[dir_map.index(dir_list[j])] for j in range(len(dir_list))]
-        center_list = df["center"][i]
-        j = 0
-        for k in range(int(len(x_list) / 2)):
-            ax.plot(x_list[j:j + 2], y_list[j:j + 2], color='c', linewidth=line_width, alpha=0.8)
-            j = j + 2
-        for k in range(int(len(center_list))):
-            arc_x_list = list(
-                center_list[k][0] + bend_radius * np.cos(np.arange(theta_list[k][0], theta_list[k][1], delta_arc)))
-            arc_y_list = list(
-                center_list[k][1] + bend_radius * np.sin(np.arange(theta_list[k][0], theta_list[k][1], delta_arc)))
-            ax.plot(arc_x_list, arc_y_list, color='c', linewidth=line_width, alpha=0.8)
+    target = [[9, 10], [15, 16], [17, 18], [23, 24]]
+    color = ['r', 'b', 'm', 'c']
+    for index in range(4):
+        for i in range(int(df.shape[0] / 4)):
+            tempx = df[df['MT'].isin(target[index])]['inflection_x'].tolist()
+            tempy = df[df['MT'].isin(target[index])]['inflection_y'].tolist()
+            bendx = df[df['MT'].isin(target[index])]['bend_x'].tolist()
+            bendy = df[df['MT'].isin(target[index])]['bend_y'].tolist()
+            dir_list = df[df['MT'].isin(target[index])]["dir"].tolist()[i]
+            center_list = df[df['MT'].isin(target[index])]["center"].tolist()[i]
+
+            x_list = [tempx[i][0]] + bendx[i] + [tempx[i][-1]]
+            y_list = [tempy[i][0]] + bendy[i] + [tempy[i][-1]]
+            theta_list = [theta_map[dir_map.index(dir_list[j])] for j in range(len(dir_list))]
+            j = 0
+            for k in range(int(len(x_list) / 2)):
+                ax.plot(x_list[j:j + 2], y_list[j:j + 2], color=color[index], linewidth=line_width, alpha=0.8)
+                j = j + 2
+            for k in range(int(len(center_list))):
+                arc_x_list = list(
+                    center_list[k][0] + bend_radius * np.cos(np.arange(theta_list[k][0], theta_list[k][1], delta_arc)))
+                arc_y_list = list(
+                    center_list[k][1] + bend_radius * np.sin(np.arange(theta_list[k][0], theta_list[k][1], delta_arc)))
+                ax.plot(arc_x_list, arc_y_list, color=color[index], linewidth=line_width, alpha=0.8)
 
     fig.savefig(save_folder+'fiberBoard896bend.svg', dpi=3000, format='svg')
     fig.savefig(save_folder+'fiberBoard896bend.pdf', dpi=3000, format='pdf')
