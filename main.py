@@ -1,5 +1,5 @@
 from problem_graph import create_sim_space
-from wiring_rect import plotter_rect, svg2dwgscr_rect
+from wiring_rect2 import plotter_rect, svg2dwgscr_rect
 from wiring_bend import plotter_bend, svg2gds_bend
 # Demands
 File_Name = "./fiberBoard896.xls"

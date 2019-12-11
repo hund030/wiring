@@ -65,6 +65,6 @@ def create_sim_space(file_name: str = "./fiberBoard896.xls", save_folder: str = 
     df_l['ly']=df_l.apply(lambda x: ll_mm_ln_posy(x), axis=1)
 
     df=pd.concat([data, df_sc, df_l], axis=1)
-    df.to_excel(save_folder +"fiberBoard896data.xlsx")
+    # df.to_excel(save_folder +"fiberBoard896data.xlsx")
 
     return df
