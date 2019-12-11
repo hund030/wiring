@@ -22,19 +22,19 @@ def create_sim_space(file_name: str = "./fiberBoard896.xls", save_folder: str = 
 
     def ll_mm_ln_posy(x):
         # the k-element is the relative position for Lk-M*-* with minimal distance in y-axis refer to BeginPoint
-        ll_bpy_list = [2.4, 14.8, 74.4, 86.8]
+        ll_bpy_list = [10.5, 23.8, 64.4, 77.7]
         dy = 0
         dy = dy + ll_bpy_list[ll_list.index(x.L) % 4]
         if x.L in ll_list[:4]:
             dy = dy + mm_list.index(x.M) * mt_gap
             if mm_list.index(x.M) >= 4:
                 dy = dy + 0.4
-            dy = dy + (NumPerOutput/2 + 0.5 - x.LN) * (line_width + line_dist)
+            dy = dy + (NumPerOutput/2 - x.LN) * (line_width + line_dist)
         else:
             dy = dy + (len(mm_list) - 1 - mm_list.index(x.M)) * mt_gap
             if mm_list.index(x.M) < 4:
                 dy = dy + 0.4
-            dy = dy + (x.LN - NumPerOutput/2 + 0.5) * (line_width + line_dist)
+            dy = dy + (x.LN - NumPerOutput/2) * (line_width + line_dist)
         return BeginPointY + dy
 
     def sc_mt_sn_posx(x):
@@ -54,7 +54,7 @@ def create_sim_space(file_name: str = "./fiberBoard896.xls", save_folder: str = 
     df_sc[2] = pd.to_numeric(df_sc[2])
     df_sc.columns = ['SC', 'MT', 'SN']
     df_sc['sx'] = df_sc.apply(lambda x: sc_mt_sn_posx(x), axis=1)
-    df_sc['sy']=df_sc.apply(lambda x: BeginPointY+29.7 if x.MT in mt_list[:4] else BeginPointY+70.3, axis=1)
+    df_sc['sy']=df_sc.apply(lambda x: BeginPointY+5 if x.MT in mt_list[:4] else BeginPointY+95, axis=1)
 
     df_l = data["Port2"].str.split('-', expand=True)
     df_l[0] = pd.to_numeric(df_l[0].str[1:])

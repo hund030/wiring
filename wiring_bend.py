@@ -16,14 +16,14 @@ def plotter_bend(df_rect: pd.DataFrame, line_width: float, dist: float, bend_rad
         # <todo>
         # ("'function' object does not support item assignment", 'occurred at index 0')
         # dir_list如何初始化更有利于维护？
-        dir_list = [(1,), (2,), (3,)]
+        dir_list = []
         for i in range(len(x.inflection_x) - 2):
             # ignore the starting point and ending point
             # the current index is i+1
             dir_in = dir_norm([x.inflection_x[i] - x.inflection_x[i + 1], x.inflection_y[i] - x.inflection_y[i + 1]])
             dir_out = dir_norm(
                 [x.inflection_x[i + 2] - x.inflection_x[i + 1], x.inflection_y[i + 2] - x.inflection_y[i + 1]])
-            dir_list[i] = tuple(np.array(dir_in) + np.array(dir_out))
+            dir_list.append(tuple(np.array(dir_in) + np.array(dir_out)))
         return dir_list
 
     def elements_round_list(a: list) -> list:
@@ -42,9 +42,10 @@ def plotter_bend(df_rect: pd.DataFrame, line_width: float, dist: float, bend_rad
                 [x.inflection_x[i + 2] - x.inflection_x[i + 1], x.inflection_y[i + 2] - x.inflection_y[i + 1]])
             bend_x_list = bend_x_list + [x.inflection_x[i + 1] + bend_radius * dir_in[0],
                                          x.inflection_x[i + 1] + bend_radius * dir_out[0]]
-        bend_x_list = [x.inflection_x[0]] + bend_x_list + [x.inflection_x[-1]]
+        # bend_x_list = [x.inflection_x[0]] + bend_x_list + [x.inflection_x[-1]]
         return elements_round_list(bend_x_list)
 
+    '''
     def bend_x_list(x):
         bend_x_list = []
         for i in range(len(x.inflection_x) - 2):
@@ -56,6 +57,7 @@ def plotter_bend(df_rect: pd.DataFrame, line_width: float, dist: float, bend_rad
             bend_x_list = bend_x_list + [x.inflection_x[i + 1] + bend_radius * dir_in[0],
                                          x.inflection_x[i + 1] + bend_radius * dir_out[0]]
         return elements_round_list(bend_x_list)
+    '''
 
     def bend_y_list(x):
         bend_y_list = []
@@ -72,10 +74,10 @@ def plotter_bend(df_rect: pd.DataFrame, line_width: float, dist: float, bend_rad
     def center_list(x):
         # <todo>
         # 同dir_list如何初始化更有利于维护？
-        center_list = [(1,), (2,), (3,)]
+        center_list = []
         for i in range(len(x.dir)):
-            center_list[i] = tuple(
-                np.array([x.inflection_x[i + 1], x.inflection_y[i + 1]]) + bend_radius * np.array(x.dir[i]))
+            center_list.append(tuple(
+                np.array([x.inflection_x[i + 1], x.inflection_y[i + 1]]) + bend_radius * np.array(x.dir[i])))
         return center_list
 
     dir_map = [(-1.0, -1.0), (1.0, -1.0), (1.0, 1.0), (-1.0, 1.0)]
@@ -111,6 +113,7 @@ def plotter_bend(df_rect: pd.DataFrame, line_width: float, dist: float, bend_rad
                 center_list[k][1] + bend_radius * np.sin(np.arange(theta_list[k][0], theta_list[k][1], delta_arc)))
             ax.plot(arc_x_list, arc_y_list, color='c', linewidth=line_width, alpha=0.8)
 
+    fig.savefig(save_folder+'fiberBoard896bend.svg', dpi=3000, format='svg')
     fig.savefig(save_folder+'fiberBoard896bend.pdf', dpi=3000, format='pdf')
 
     df.to_excel(save_folder + "fiberBoard896bend.xlsx")

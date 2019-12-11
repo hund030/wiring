@@ -2,16 +2,16 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 
+Bend_Radius = 7.0
+
 def wiring_rect_l15_l16(dist: float, df: pd.DataFrame) -> pd.DataFrame:
     def f_inflection_x_l15_l16(x):
         return list(
-            [round(x.lx, 4), round(x.lx + 5 + x.inflection_x, 4), round(x.lx + 5 + x.inflection_x, 4), round(x.sx, 4),
-             round(x.sx, 4)])
+            [round(x.lx, 4), round(x.sx, 4), round(x.sx, 4)])
 
     def f_inflection_y_l15_l16(x):
         return list(
-            [round(x.ly, 4), round(x.ly, 4), round(x.sy - 5 - x.inflection_y, 4), round(x.sy - 5 - x.inflection_y, 4),
-             round(x.sy, 4)])
+            [round(x.ly, 4), round(x.ly, 4), round(x.sy, 4)])
 
     df2 = df.copy()
     df2 = df2[df2['L'].isin([15, 16])]
@@ -39,13 +39,13 @@ def wiring_rect_l9_l10(dist: float, df: pd.DataFrame, df2: pd.DataFrame) -> pd.D
     # df2 = wiring_rect_l15_l16(dist, df)
     def f_inflection_x_l9_l10(x):
         return list(
-            [round(x.lx, 4), round(x.lx + 5 + x.inflection_x, 4), round(x.lx + 5 + x.inflection_x, 4), round(x.sx, 4),
+            [round(x.lx, 4), round(x.lx + Bend_Radius + x.inflection_x, 4), round(x.lx + Bend_Radius + x.inflection_x, 4), round(x.sx, 4),
              round(x.sx, 4)])
 
     def f_inflection_y_l9_l10(x):
         return list(
-            [round(x.ly, 4), round(x.ly, 4), round(df2['inflection_y'][df2.shape[0] - 1][3] - dist - x.inflection_y, 4),
-             round(df2['inflection_y'][df2.shape[0] - 1][3] - dist - x.inflection_y, 4), round(x.sy, 4)])
+            [round(x.ly, 4), round(x.ly, 4), round(df2['inflection_y'][df2.shape[0] - 1][0] - dist - x.inflection_y, 4),
+             round(df2['inflection_y'][df2.shape[0] - 1][0] - dist - x.inflection_y, 4), round(x.sy, 4)])
 
     df3 = df.copy()
     df3 = df3[df3['L'].isin([9, 10])]
@@ -71,13 +71,11 @@ def wiring_rect_l9_l10(dist: float, df: pd.DataFrame, df2: pd.DataFrame) -> pd.D
 def wiring_rect_l17_l18(dist: float, df: pd.DataFrame) -> pd.DataFrame:
     def f_inflection_x_l17_118(x):
         return list(
-            [round(x.lx, 4), round(x.lx - 5 - x.inflection_x, 4), round(x.lx - 5 - x.inflection_x, 4), round(x.sx, 4),
-             round(x.sx, 4)])
+            [round(x.lx, 4), round(x.sx, 4), round(x.sx, 4)])
 
     def f_inflection_y_l17_118(x):
         return list(
-            [round(x.ly, 4), round(x.ly, 4), round(x.sy + 5 + x.inflection_y, 4), round(x.sy + 5 + x.inflection_y, 4),
-             round(x.sy, 4)])
+            [round(x.ly, 4), round(x.ly, 4), round(x.sy, 4)])
 
     df4 = df.copy()
     df4 = df4[df4['L'].isin([17, 18])]
@@ -105,13 +103,13 @@ def wiring_rect_l23_l24(dist: float, df: pd.DataFrame, df4: pd.DataFrame) -> pd.
     # df4 = wiring_rect_l17_l18(dist, df)
     def f_inflection_x_l23_124(x):
         return list(
-            [round(x.lx, 4), round(x.lx - 5 - x.inflection_x, 4), round(x.lx - 5 - x.inflection_x, 4), round(x.sx, 4),
+            [round(x.lx, 4), round(x.lx - Bend_Radius - x.inflection_x, 4), round(x.lx - Bend_Radius - x.inflection_x, 4), round(x.sx, 4),
              round(x.sx, 4)])
 
     def f_inflection_y_l23_124(x):
         return list(
-            [round(x.ly, 4), round(x.ly, 4), round(df4['inflection_y'][df4.shape[0] - 1][2] + dist + x.inflection_y, 4),
-             round(df4['inflection_y'][df4.shape[0] - 1][2] + dist + x.inflection_y, 4), round(x.sy, 4)])
+            [round(x.ly, 4), round(x.ly, 4), round(df4['inflection_y'][df4.shape[0] - 1][0] + dist + x.inflection_y, 4),
+             round(df4['inflection_y'][df4.shape[0] - 1][0] + dist + x.inflection_y, 4), round(x.sy, 4)])
 
     df5 = df.copy()
     df5 = df5[df5['L'].isin([23, 24])]
