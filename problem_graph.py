@@ -71,7 +71,7 @@ def create_sim_space(file_name: str = "./fiberBoard896.xls", save_folder: str = 
     return df
 
 
-def create_sim_space_826(file_name: str = "./fiberBoard826.xls", save_folder: str = './results/', line_width: float = 0.05, line_dist: float = 0.25) -> pd.DataFrame:
+def create_sim_space_826(file_name: str = "./fiberBoard826.xls", save_folder: str = './results/', line_width: float = 0.05, line_dist: float = 0.25, channel_num: int = 12) -> pd.DataFrame:
     data = pd.read_excel(file_name)
 
     BeginPointX = 0
@@ -82,43 +82,63 @@ def create_sim_space_826(file_name: str = "./fiberBoard826.xls", save_folder: st
     # zoom_factor_y = 100.0 / 70
 
     above_list = [29, 26, 24, 20, 21, 18, 19, 16, 17,  2, 14, 15, 12, 13, 10, 11,  8,  9,  1,  6,  7]
-    above_dist = [48, 78, 50, 39, 21, 12,  8,  9,  8, 16, 19,  8, 10,  8, 14,  8, 25,  8,  8,  8,  8]
+    above_dist = [48, 78, 50, 39, 21, 12, 8, 9, 8, 16, 19, 8, 10, 8, 14, 8, 25, 8, 8, 8, 8]
     below_list = [59, 53, 54, 55, 56, 57, 58, 52, 47, 48, 49, 50, 51, 43, 44, 45, 46, 41, 42, 39, 38, 33, 32, 31, 30]
     below_dist = [14,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8, 21,  8, 55, 25, 80, 19, 25, 25]
-
-    channels = [[0 for i in range(48)] for j in range(60)]
-
-    def find_1st_0(l):
-        return next((i for i, x in enumerate(l) if x == 0), None)
-
-    def layout_sn_ln(x):
-        try:
-            # find the 1st '0' in the list
-            p1 = find_1st_0(channels[x.Port1])
-            p2 = find_1st_0(channels[x.Port2])
-            while int(p1/12) != int(p2/12):
-                if int(p1/12) > int(p2/12):
-                    p2 = find_1st_0(channels[x.Port2][int(p1/12)*12:]) + int(p1/12)*12
-                elif int(p1/12) < int(p2/12):
-                    p1 = find_1st_0(channels[x.Port1][int(p2/12)*12:]) + int(p2/12)*12
-            channels[x.Port1][p1] = 1
-            channels[x.Port2][p2] = 1
-            return (p1, p2)
-        except:
-            print(x.Port1, x.Port2)
-            return (-1, -1)
-
-    def layout_sn(x):
-        sum(channels[x.Port1])
-
     above_dist = np.cumsum(above_dist) * zoom_factor_x
     below_dist = np.cumsum(below_dist) * zoom_factor_x
 
+    channels = [[0 for i in range(channel_num*4)] for j in range(60)]
+
+    def find_1st_0(l, st):
+        x = next((i for i, x in enumerate(l[st:]) if x == 0), None)
+        if x != None:
+            return x + st
+        else:
+            return next((i for i, x in enumerate(l[:st]) if x == 0), None) + st
+
+    def layout_sn_ln(x):
+        # find the 1st '0' in the list
+        p1 = find_1st_0(channels[x.Port1], 0)
+        p2 = find_1st_0(channels[x.Port2], 0)
+        #TODO::maybe dead loop here, caution!!
+        while int(p1/channel_num) != int(p2/channel_num):
+            if int(p1/channel_num) > int(p2/channel_num):
+                p2 = find_1st_0(channels[x.Port2], int(p1/channel_num)*channel_num)
+            elif int(p1/channel_num) < int(p2/channel_num):
+                p1 = find_1st_0(channels[x.Port1], int(p2/channel_num)*channel_num)
+        channels[x.Port1][p1] = 1
+        channels[x.Port2][p2] = 1
+        return (p1, p2)
+
+    def layout_sn(x):
+        return x.SN_LN[0]
+
+    def layout_ln(x):
+        return x.SN_LN[1]
+
+    def sn_posx(x):
+        base_x = above_dist[above_list.index(x.Port1)] if x.Port1 in above_list else below_dist[below_list.index(x.Port1)]
+        return base_x + (x.SN - channel_num / 2) * (line_dist + line_width)
+
+    def ln_posx(x):
+        base_x = above_dist[above_list.index(x.Port2)] if x.Port2 in above_list else below_dist[below_list.index(x.Port2)]
+        return base_x + (x.LN - channel_num / 2) * (line_dist + line_width)
+
     data["Port1"] = pd.to_numeric(data["Port1"].str.split(':', expand=True)[0].str[1:])
     data["Port2"] = pd.to_numeric(data["Port2"].str.split(':', expand=True)[0].str[1:])
-    data["SN-LN"] = data.apply(lambda x: layout_sn_ln(x), axis=1)
-    # data["SN"] = data.apply(lambda x: layout_sn(x), axis=1)
-    # data["LN"] = data.apply(lambda x: layout_ln(x), axis=1)
+    data["SN_LN"] = data.apply(lambda x: layout_sn_ln(x), axis=1)
+    data["SN"] = data.apply(lambda x: layout_sn(x), axis=1)
+    data["LN"] = data.apply(lambda x: layout_ln(x), axis=1)
+
+    data["sx"] = data.apply(lambda x: sn_posx(x), axis=1)
+    data["lx"] = data.apply(lambda x: ln_posx(x), axis=1)
+    # switch port1 and port2 if port2 is at the right of port1. (but seems no need to do so since port1 is always at the right of port2)
+    idx = (data["sx"] < data["lx"])
+    data.loc[idx, ["Port1", "Port2", "SN", "LN", "sx", "lx"]] = data.loc[idx, ["Port2", "Port1", "LN", "SN", "lx", "sx"]]
+    # hard code 100 height here
+    data["sy"] = data.apply(lambda x: BeginPointY+100 if x.Port1 in above_list else BeginPointY, axis=1)
+    data["ly"] = data.apply(lambda x: BeginPointY+100 if x.Port2 in above_list else BeginPointY, axis=1)
 
     data.to_excel(save_folder + "fiberBoard826data.xlsx")
 
