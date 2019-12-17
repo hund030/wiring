@@ -133,12 +133,15 @@ def create_sim_space_826(file_name: str = "./fiberBoard826.xls", save_folder: st
 
     data["sx"] = data.apply(lambda x: sn_posx(x), axis=1)
     data["lx"] = data.apply(lambda x: ln_posx(x), axis=1)
-    # switch port1 and port2 if port2 is at the right of port1. (but seems no need to do so since port1 is always at the right of port2)
+    # switch port1 and port2 if port2 is at the right of port1.
     idx = (data["sx"] < data["lx"])
-    data.loc[idx, ["Port1", "Port2", "SN", "LN", "sx", "lx"]] = data.loc[idx, ["Port2", "Port1", "LN", "SN", "lx", "sx"]]
+    data.loc[idx, ["Port1", "Port2", "SN", "LN", "sx", "lx"]] = data.loc[idx, ["Port2", "Port1", "LN", "SN", "lx", "sx"]].values
+    data["dx"] = data.apply(lambda x: x.sx - x.lx, axis=1)
     # hard code 100 height here
     data["sy"] = data.apply(lambda x: BeginPointY+100 if x.Port1 in above_list else BeginPointY, axis=1)
-    data["ly"] = data.apply(lambda x: BeginPointY+100 if x.Port2 in above_list else BeginPointY, axis=1)
+    data["ly"] = data.apply(lambda x: BeginPointY + 100 if x.Port2 in above_list else BeginPointY, axis=1)
+    data["dz"] = data.apply(lambda x: int(x.SN / channel_num), axis=1)
+    data = data.sort_values(by="dx", ascending=True)
 
     data.to_excel(save_folder + "fiberBoard826data.xlsx")
 
