@@ -130,6 +130,7 @@ def plotter_rect(df: pd.DataFrame, line_width: float, dist: float, save_folder: 
         ax.plot(x_list, y_list, color='g', linewidth=line_width, alpha=0.8)
     fig.savefig(save_folder + 'fiberBoard826_rect.pdf', dpi=3000, format='pdf')
 
+    df.to_excel(save_folder+"fiberBoard826rect.xlsx")
     return df
 
 
