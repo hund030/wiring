@@ -5,13 +5,21 @@ interface_length = 5
 
 def wiring_rect_below(dist: float, df: pd.DataFrame) -> pd.DataFrame:
     def f_inflection_x(x):
-        return list([round(x.sx, 4), round(x.sx, 4), round(x.lx, 4), round(x.lx, 4)])
+        if x.dx < 10:
+            return list([x.sx, x.sx, x.sx+10, x.sx+10, x.lx, x.lx])
+        else:
+            return list([round(x.sx, 4), round(x.sx, 4), round(x.lx, 4), round(x.lx, 4)])
 
     def f_inflection_y(x):
-        return list([round(x.sy, 4), round(x.inflection, 4), round(x.inflection, 4), round(x.ly, 4)])
+        if x.dx < 10:
+            return list([x.sy, x.inflection+5, x.inflection+5, x.inflection+10, x.inflection+10, x.ly])
+        else:
+            return list([round(x.sy, 4), round(x.inflection, 4), round(x.inflection, 4), round(x.ly, 4)])
 
     df2 = df.copy()
     df2 = df2[(df2["sy"]==0) & (df2["ly"]==0)]
+    df22 = df2[(df2["dx"] < 10)]
+    df2 = df2[(df2["dx"] >= 10)]
 
     list_inflection = [(i * dist + interface_length for i in range(df2[df2["dz"]==layer].shape[0])) for layer in range(4)]
     df2['inflection'] = df2.apply(lambda x: next(list_inflection[x.dz]), axis=1)
@@ -22,10 +30,16 @@ def wiring_rect_below(dist: float, df: pd.DataFrame) -> pd.DataFrame:
 
 def wiring_rect_above(dist: float, df: pd.DataFrame) -> pd.DataFrame:
     def f_inflection_x(x):
-        return list([round(x.sx, 4), round(x.sx, 4), round(x.lx, 4), round(x.lx, 4)])
+        if x.dx < 10:
+            return list([x.sx, x.sx, x.sx+10, x.sx+10, x.lx, x.lx])
+        else:
+            return list([round(x.sx, 4), round(x.sx, 4), round(x.lx, 4), round(x.lx, 4)])
 
     def f_inflection_y(x):
-        return list([round(x.sy, 4), round(x.inflection, 4), round(x.inflection, 4), round(x.ly, 4)])
+        if x.dx < 10:
+            return list([x.sy, x.inflection-5, x.inflection-5, x.inflection-10, x.inflection-10, x.ly])
+        else:
+            return list([round(x.sy, 4), round(x.inflection, 4), round(x.inflection, 4), round(x.ly, 4)])
 
     df4 = df.copy()
     df4 = df4[(df4["sy"]!=0) & (df4["ly"]!=0)]
@@ -39,10 +53,16 @@ def wiring_rect_above(dist: float, df: pd.DataFrame) -> pd.DataFrame:
 
 def wiring_rect_below_above(dist: float, df: pd.DataFrame, df2: pd.DataFrame) -> pd.DataFrame:
     def f_inflection_x(x):
-        return list([round(x.sx, 4), round(x.sx, 4), round(x.lx, 4), round(x.lx, 4)])
+        if x.dx < 10:
+            return list([x.sx, x.sx, x.sx+10, x.sx+10, x.lx, x.lx])
+        else:
+            return list([round(x.sx, 4), round(x.sx, 4), round(x.lx, 4), round(x.lx, 4)])
 
     def f_inflection_y(x):
-        return list([round(x.sy, 4), round(x.inflection, 4), round(x.inflection, 4), round(x.ly, 4)])
+        if x.dx < 10:
+            return list([x.sy, x.inflection+5, x.inflection+5, x.inflection+10, x.inflection+10, x.ly])
+        else:
+            return list([round(x.sy, 4), round(x.inflection, 4), round(x.inflection, 4), round(x.ly, 4)])
 
     df3 = df.copy()
     df3 = df3[(df3["sy"]==0) & (df3["ly"]!=0)]
@@ -56,10 +76,20 @@ def wiring_rect_below_above(dist: float, df: pd.DataFrame, df2: pd.DataFrame) ->
 
 def wiring_rect_above_below(dist: float, df: pd.DataFrame, df4: pd.DataFrame) -> pd.DataFrame:
     def f_inflection_x(x):
-        return list([round(x.sx, 4), round(x.sx, 4), round(x.lx, 4), round(x.lx, 4)])
+        if x.dx == 0:
+            return list([x.sx, x.lx])
+        elif x.dx < 10:
+            return list([x.sx, x.sx, x.sx+10, x.sx+10, x.lx, x.lx])
+        else:
+            return list([round(x.sx, 4), round(x.sx, 4), round(x.lx, 4), round(x.lx, 4)])
 
     def f_inflection_y(x):
-        return list([round(x.sy, 4), round(x.inflection, 4), round(x.inflection, 4), round(x.ly, 4)])
+        if x.dx == 0:
+            return list([x.sy, x.ly])
+        elif x.dx < 10:
+            return list([x.sy, x.inflection-5, x.inflection-5, x.inflection-10, x.inflection-10, x.ly])
+        else:
+            return list([round(x.sy, 4), round(x.inflection, 4), round(x.inflection, 4), round(x.ly, 4)])
 
     df5 = df.copy()
     df5 = df5[(df5["sy"]!=0) & (df5["ly"]==0)]
