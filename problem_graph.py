@@ -82,7 +82,7 @@ def create_sim_space_826(file_name: str = "./fiberBoard826.xls", save_folder: st
     # zoom_factor_y = 100.0 / 70
 
     above_list = [29, 26, 24, 20, 21, 18, 19, 16, 17,  2, 14, 15, 12, 13, 10, 11,  8,  9,  1,  6,  7]
-    above_dist = [15, 16,  4, 4, 4, 16.8,  4,  4,  4,5.4,  4,  4,  4,  4,8.8,  4,  4,  4,5.4,  4,  4]
+    above_dist = [15, 16,  4, 4, 4, 14.8,  4,  4,  4,5.4,  4,  4,  4, 4, 9.6,  4,  4,  4,5.4,  4,  4]
     # switch port 41 and port 42
     below_list = [59, 53, 54, 55, 56, 57, 58, 52, 47, 48, 49, 50, 51, 43, 44, 45, 46, 41, 42, 39, 38, 33, 32, 31, 30]
     below_dist = [ 3,  4,  4,  4,  4,  4,  4,  4,  4,  4,  8,  4,  4,  4,  4,  4,  4,  4,  4, 12,  6, 12,  4,  6,  6]
@@ -123,11 +123,11 @@ def create_sim_space_826(file_name: str = "./fiberBoard826.xls", save_folder: st
 
     def sn_posx(x):
         base_x = above_dist[above_list.index(x.Port1)] if x.Port1 in above_list else below_dist[below_list.index(x.Port1)]
-        return round(base_x + (x.SN%channel_num - channel_num / 2) * (line_dist + line_width), 4)
+        return base_x + (x.SN%channel_num - channel_num / 2) * (line_dist + line_width)
 
     def ln_posx(x):
         base_x = above_dist[above_list.index(x.Port2)] if x.Port2 in above_list else below_dist[below_list.index(x.Port2)]
-        return round(base_x + (x.LN%channel_num - channel_num / 2) * (line_dist + line_width), 4)
+        return base_x + (x.LN%channel_num - channel_num / 2) * (line_dist + line_width)
 
     data["Port1"] = pd.to_numeric(data["Port1"].str.split(':', expand=True)[0].str[1:])
     data["Port2"] = pd.to_numeric(data["Port2"].str.split(':', expand=True)[0].str[1:])
