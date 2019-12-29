@@ -156,8 +156,6 @@ def create_sim_space_826(file_name: str = "./fiberBoard826.xls", save_folder: st
         base_x = above_dist[above_list.index(x.Port2)] if x.Port2 in above_list else below_dist[below_list.index(x.Port2)]
         return base_x + (x.LN%channel_num - channel_num / 2) * (line_dist + line_width)
 
-    data["origin1"] = data["Port1"]
-    data["origin2"] = data["Port2"]
     data["Port1"] = pd.to_numeric(data["Port1"].str.split(':', expand=True)[0].str[1:])
     data["Port2"] = pd.to_numeric(data["Port2"].str.split(':', expand=True)[0].str[1:])
     data["SN_LN"] = data.apply(lambda x: layout_sn_ln(x), axis=1)
@@ -174,6 +172,8 @@ def create_sim_space_826(file_name: str = "./fiberBoard826.xls", save_folder: st
     data["sy"] = data.apply(lambda x: BeginPointY+100 if x.Port1 in above_list else BeginPointY, axis=1)
     data["ly"] = data.apply(lambda x: BeginPointY + 100 if x.Port2 in above_list else BeginPointY, axis=1)
     data["dz"] = data.apply(lambda x: int(x.SN / channel_num), axis=1)
+    idx = (data["ly"] < data["sy"])
+    data.loc[idx, ["Port1", "Port2", "SN", "LN", "sy", "ly"]] = data.loc[idx, ["Port2", "Port1", "LN", "SN", "ly", "sy"]].values
     data = data.sort_values(by="dx", ascending=True)
 
     data.to_excel(save_folder + "fiberBoard826data.xlsx")
