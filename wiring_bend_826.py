@@ -40,24 +40,15 @@ def plotter_bend(df_rect: pd.DataFrame, line_width: float, dist: float, bend_rad
             dir_in = dir_norm([x.inflection_x[i] - x.inflection_x[i + 1], x.inflection_y[i] - x.inflection_y[i + 1]])
             dir_out = dir_norm(
                 [x.inflection_x[i + 2] - x.inflection_x[i + 1], x.inflection_y[i + 2] - x.inflection_y[i + 1]])
-            bend_x_list = bend_x_list + [x.inflection_x[i + 1] + bend_radius * dir_in[0],
-                                         x.inflection_x[i + 1] + bend_radius * dir_out[0]]
+            if x.dx >= 10:
+                bend_x_list = bend_x_list + [x.inflection_x[i + 1] + bend_radius * dir_in[0],
+                                         x.inflection_x[i + 1] + bend_radius*dir_out[0]]
+            #TODO: only match to current situation
+            else:
+                bend_x_list = bend_x_list + [x.inflection_x[i + 1] + x.dx * 0.5 * dir_in[0],
+                                        x.inflection_x[i + 1] + x.dx* 0.5*dir_out[0]]
         # bend_x_list = [x.inflection_x[0]] + bend_x_list + [x.inflection_x[-1]]
         return elements_round_list(bend_x_list)
-
-    '''
-    def bend_x_list(x):
-        bend_x_list = []
-        for i in range(len(x.inflection_x) - 2):
-            # ignore the starting point and ending point
-            # the current index is i+1
-            dir_in = dir_norm([x.inflection_x[i] - x.inflection_x[i + 1], x.inflection_y[i] - x.inflection_y[i + 1]])
-            dir_out = dir_norm(
-                [x.inflection_x[i + 2] - x.inflection_x[i + 1], x.inflection_y[i + 2] - x.inflection_y[i + 1]])
-            bend_x_list = bend_x_list + [x.inflection_x[i + 1] + bend_radius * dir_in[0],
-                                         x.inflection_x[i + 1] + bend_radius * dir_out[0]]
-        return elements_round_list(bend_x_list)
-    '''
 
     def bend_y_list(x):
         bend_y_list = []
@@ -67,8 +58,13 @@ def plotter_bend(df_rect: pd.DataFrame, line_width: float, dist: float, bend_rad
             dir_in = dir_norm([x.inflection_x[i] - x.inflection_x[i + 1], x.inflection_y[i] - x.inflection_y[i + 1]])
             dir_out = dir_norm(
                 [x.inflection_x[i + 2] - x.inflection_x[i + 1], x.inflection_y[i + 2] - x.inflection_y[i + 1]])
-            bend_y_list = bend_y_list + [x.inflection_y[i + 1] + bend_radius * dir_in[1],
+            if x.dx >= 10:
+                bend_y_list = bend_y_list + [x.inflection_y[i + 1] + bend_radius * dir_in[1],
                                          x.inflection_y[i + 1] + bend_radius * dir_out[1]]
+            #TODO: only match to current situation
+            else:
+                bend_y_list = bend_y_list + [x.inflection_y[i + 1] + bend_radius * np.sin(np.arccos((bend_radius - x.dx*0.5) / bend_radius)) * dir_in[1],
+                                        x.inflection_y[i+1]+ bend_radius * np.sin(np.arccos((bend_radius - x.dx*0.5) / bend_radius)) * dir_out[1]]
         return elements_round_list(bend_y_list)
 
     def center_list(x):
@@ -76,18 +72,26 @@ def plotter_bend(df_rect: pd.DataFrame, line_width: float, dist: float, bend_rad
         # 同dir_list如何初始化更有利于维护？
         center_list = []
         for i in range(len(x.dir)):
-            center_list.append(tuple(
-                np.array([x.inflection_x[i + 1], x.inflection_y[i + 1]]) + bend_radius * np.array(x.dir[i])))
+            if x.dx >= 10:
+                center_list.append(tuple(
+                    np.array([x.inflection_x[i + 1], x.inflection_y[i + 1]]) + bend_radius*np.array(x.dir[i])))
+            else:
+                center_list.append(tuple(
+                    np.array([x.bend_x[i + 1], x.bend_y[i-1]])))
+
         return center_list
+
+    def calc_theta(dx, d):
+        return (0, np.arccos((bend_radius-dx*0.5)/bend_radius)*d[1])
 
     dir_map = [(-1.0, -1.0), (1.0, -1.0), (1.0, 1.0), (-1.0, 1.0)]
     theta_map = [(0, np.pi / 2), (np.pi / 2, np.pi), (np.pi, np.pi / 2 * 3), (np.pi / 2 * 3, 2 * np.pi)]
 
     df = df_rect.copy()
     df["dir"] = df.apply(dir_list, axis=1)
-    df["center"] = df.apply(center_list, axis=1)
     df["bend_x"] = df.apply(bend_x_list, axis=1)
     df["bend_y"] = df.apply(bend_y_list, axis=1)
+    df["center"] = df.apply(center_list, axis=1)
 
     color = ['r', 'b', 'm', 'c']
     for layer in range(4):
@@ -107,7 +111,8 @@ def plotter_bend(df_rect: pd.DataFrame, line_width: float, dist: float, bend_rad
 
             x_list = [tempx[0]] + bendx + [tempx[-1]]
             y_list = [tempy[0]] + bendy + [tempy[-1]]
-            theta_list = [theta_map[dir_map.index(dir_list[j])] for j in range(len(dir_list))]
+            # theta_list = [theta_map[dir_map.index(dir_list[j])] for j in range(len(dir_list))]
+            theta_list = [calc_theta(abs(tempx[0]-tempx[-1]), d) if abs(tempx[0]-tempx[-1]) < 10 and tempx[0]!=tempx[-1] else theta_map[dir_map.index(d)] for d in dir_list]
             j = 0
             for k in range(int(len(x_list) / 2)):
                 ax.plot(x_list[j:j + 2], y_list[j:j + 2], color=color[layer], linewidth=line_width, alpha=0.8)
@@ -116,7 +121,7 @@ def plotter_bend(df_rect: pd.DataFrame, line_width: float, dist: float, bend_rad
                 arc_x_list = list(
                     center_list[k][0] + bend_radius * np.cos(np.arange(theta_list[k][0], theta_list[k][1], delta_arc)))
                 arc_y_list = list(
-                    center_list[k][1] + bend_radius * np.sin(np.arange(theta_list[k][0], theta_list[k][1], delta_arc)))
+                    center_list[k][1] + bend_radius*np.sin(np.arange(theta_list[k][0], theta_list[k][1], delta_arc)))
                 ax.plot(arc_x_list, arc_y_list, color=color[layer], linewidth=line_width, alpha=0.8)
 
         fig.savefig(save_folder+'fiberBoard826bend' + str(layer) + '.svg', dpi=3000, format='svg')

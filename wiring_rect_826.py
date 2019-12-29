@@ -58,7 +58,8 @@ def wiring_rect_below2above(dist: float, df: pd.DataFrame, df2: pd.DataFrame) ->
 
     df3 = df.copy()
     df3 = df3[((df3["sy"] == 0) & (df3["ly"] != 0)) | ((df3["sy"] != 0) & (df3["ly"] == 0))]
-    df3.sort_values(by="sy", ascending=True)
+    df3 = df3.sort_values(by="sx", ascending=True)
+    df3 = pd.concat([df3[df3["sx"] > 30], df3[df3["sx"] <= 30]])
 
     list_inflection = [((i + df2[df2["dz"]==layer].shape[0]) * dist + interface_length for i in range(df3[df3["dz"]==layer].shape[0])) for layer in range(4)]
     df3['inflection'] = df3.apply(lambda x: next(list_inflection[x.dz]), axis=1)
@@ -76,6 +77,23 @@ def plotter_rect(df: pd.DataFrame, line_width: float, dist: float, save_folder: 
     # df.to_excel(save_folder + "fiberBoard826data.xlsx")
 
     '''
+    color = ['r', 'b', 'm', 'c']
+    for layer in range(4):
+        fig = plt.figure()
+        ax = plt.gca()
+
+        ax.set_xlabel('x')
+        ax.set_ylabel('y')
+
+        for i in range(df[df['dz'] == layer].shape[0]):
+            x_list = df3['inflection_x'].tolist()[i]
+            y_list = df3['inflection_y'].tolist()[i]
+            ax.plot(x_list, y_list, color='y', linewidth=line_width, alpha=0.8)
+
+        fig.savefig(save_folder+'fiberBoard826bend' + str(layer) + '.svg', dpi=3000, format='svg')
+        fig.savefig(save_folder+'fiberBoard826bend' + str(layer) + '.pdf', dpi=3000, format='pdf')
+    '''
+
     fig = plt.figure()
     ax = plt.gca()
     ax.set_xlabel('x')
@@ -106,6 +124,7 @@ def plotter_rect(df: pd.DataFrame, line_width: float, dist: float, save_folder: 
         ax.plot(x_list, y_list, color='b', linewidth=line_width, alpha=0.8)
     fig.savefig(save_folder + 'fiberBoard826_above.pdf', dpi=3000, format='pdf')
 
+    '''
     fig = plt.figure()
     ax = plt.gca()
     ax.set_xlabel('x')
@@ -127,7 +146,8 @@ def plotter_rect(df: pd.DataFrame, line_width: float, dist: float, save_folder: 
         ax.plot(x_list, y_list, color='g', linewidth=line_width, alpha=0.8)
     fig.savefig(save_folder + 'fiberBoard826_rect.pdf', dpi=3000, format='pdf')
 
-    df.to_excel(save_folder+"fiberBoard826rect.xlsx")
+    df.to_excel(save_folder + "fiberBoard826rect.xlsx")
+
     return df
 
 
