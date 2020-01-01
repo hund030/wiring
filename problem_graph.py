@@ -174,7 +174,7 @@ def create_sim_space_826(file_name: str = "./fiberBoard826.xls", save_folder: st
     idx = (data["ly"] < data["sy"])
     data.loc[idx, ["Port1", "Port2", "SN", "LN", "sy", "ly", "sx", "lx"]] = data.loc[idx, ["Port2", "Port1", "LN", "SN", "ly", "sy", "lx", "sx"]].values
     data["dz"] = data.apply(lambda x: int(x.SN / channel_num), axis=1)
-    data = data.sort_values(by="dx", ascending=True)
+    # data = data.sort_values(by="dx", ascending=True)
 
     data.to_excel(save_folder + "fiberBoard826data.xlsx")
 

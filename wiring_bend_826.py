@@ -76,13 +76,16 @@ def plotter_bend(df_rect: pd.DataFrame, line_width: float, dist: float, bend_rad
                 center_list.append(tuple(
                     np.array([x.inflection_x[i + 1], x.inflection_y[i + 1]]) + bend_radius*np.array(x.dir[i])))
             else:
+                # TODO:only match to this situation
                 center_list.append(tuple(
-                    np.array([x.bend_x[i + 1], x.bend_y[i-1]])))
+                    np.array([x.bend_x[i*(len(x.bend_x)-1)] + bend_radius*x.dir[i][0], x.bend_y[i*(len(x.bend_y)-1)]])))
 
         return center_list
 
     def calc_theta(dx, d):
-        return (0, np.arccos((bend_radius-dx*0.5)/bend_radius)*d[1])
+        theta = np.arccos((bend_radius - dx * 0.5) / bend_radius)
+        theta_map_s = [(0, theta), (np.pi-theta, np.pi), (np.pi, np.pi+theta), (2*np.pi-theta, 2*np.pi)]
+        return theta_map_s[dir_map.index(d)]
 
     dir_map = [(-1.0, -1.0), (1.0, -1.0), (1.0, 1.0), (-1.0, 1.0)]
     theta_map = [(0, np.pi / 2), (np.pi / 2, np.pi), (np.pi, np.pi / 2 * 3), (np.pi / 2 * 3, 2 * np.pi)]
@@ -101,18 +104,20 @@ def plotter_bend(df_rect: pd.DataFrame, line_width: float, dist: float, bend_rad
         ax.set_xlabel('x')
         ax.set_ylabel('y')
 
-        for i in range(df[df['dz'] == layer].shape[0]):
+        # for i in range(df[df['dz'] == layer].shape[0]):
+        for i in range(df[(df['dz'] == layer)].shape[0]):
             tempx = df[df['dz'] == layer]['inflection_x'].tolist()[i]
             tempy = df[df['dz'] == layer]['inflection_y'].tolist()[i]
             bendx = df[df['dz'] == layer]['bend_x'].tolist()[i]
             bendy = df[df['dz'] == layer]['bend_y'].tolist()[i]
             dir_list = df[df['dz'] == layer]['dir'].tolist()[i]
             center_list = df[df['dz'] == layer]['center'].tolist()[i]
+            dx = df[(df['dz'] == layer)]["dx"].tolist()[i]
 
             x_list = [tempx[0]] + bendx + [tempx[-1]]
             y_list = [tempy[0]] + bendy + [tempy[-1]]
             # theta_list = [theta_map[dir_map.index(dir_list[j])] for j in range(len(dir_list))]
-            theta_list = [calc_theta(abs(tempx[0]-tempx[-1]), d) if abs(tempx[0]-tempx[-1]) < 10 and tempx[0]!=tempx[-1] else theta_map[dir_map.index(d)] for d in dir_list]
+            theta_list = [calc_theta(dx, d) if dx<10 and dx!=0 else theta_map[dir_map.index(d)] for d in dir_list]
             j = 0
             for k in range(int(len(x_list) / 2)):
                 ax.plot(x_list[j:j + 2], y_list[j:j + 2], color=color[layer], linewidth=line_width, alpha=0.8)
@@ -135,17 +140,19 @@ def plotter_bend(df_rect: pd.DataFrame, line_width: float, dist: float, bend_rad
 
     color = ['r', 'b', 'm', 'c']
     for layer in range(4):
-        for i in range(df[df['dz'] == layer].shape[0]):
-            tempx = df[df['dz'] == layer]['inflection_x'].tolist()[i]
-            tempy = df[df['dz'] == layer]['inflection_y'].tolist()[i]
-            bendx = df[df['dz'] == layer]['bend_x'].tolist()[i]
-            bendy = df[df['dz'] == layer]['bend_y'].tolist()[i]
-            dir_list = df[df['dz'] == layer]['dir'].tolist()[i]
-            center_list = df[df['dz'] == layer]['center'].tolist()[i]
+        for i in range(df[(df['dz'] == layer)].shape[0]):
+            tempx = df[(df['dz'] == layer)]['inflection_x'].tolist()[i]
+            tempy = df[(df['dz'] == layer)]['inflection_y'].tolist()[i]
+            bendx = df[(df['dz'] == layer)]['bend_x'].tolist()[i]
+            bendy = df[(df['dz'] == layer)]['bend_y'].tolist()[i]
+            dir_list = df[(df['dz'] == layer)]['dir'].tolist()[i]
+            center_list = df[(df['dz'] == layer)]['center'].tolist()[i]
+            dx = df[(df['dz'] == layer)]["dx"].tolist()[i]
 
             x_list = [tempx[0]] + bendx + [tempx[-1]]
             y_list = [tempy[0]] + bendy + [tempy[-1]]
-            theta_list = [theta_map[dir_map.index(dir_list[j])] for j in range(len(dir_list))]
+            # theta_list = [theta_map[dir_map.index(dir_list[j])] for j in range(len(dir_list))]
+            theta_list = [calc_theta(dx, d) if dx<10 and dx!=0 else theta_map[dir_map.index(d)] for d in dir_list]
             j = 0
             for k in range(int(len(x_list) / 2)):
                 ax.plot(x_list[j:j + 2], y_list[j:j + 2], color=color[layer], linewidth=line_width, alpha=0.8)
