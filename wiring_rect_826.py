@@ -56,6 +56,10 @@ def wiring_rect_below2above(dist: float, df: pd.DataFrame, df2: pd.DataFrame) ->
         else:
             return list([round(x.sy, 4), round(x.inflection, 4), round(x.inflection, 4), round(x.ly, 4)])
 
+    def f_inflection(x):
+        gap = [((i + df2[df2["dz"]==layer].shape[0]) * dist + interface_length for i in range(df3[df3["dz"]==layer].shape[0])) for layer in range(4)]
+        list_inflection = [((i + df2[df2["dz"]==layer].shape[0]) * dist + interface_length for i in range(df3[df3["dz"]==layer].shape[0])) for layer in range(4)]
+
     df3 = df.copy()
     df3 = df3[((df3["sy"] == 0) & (df3["ly"] != 0)) | ((df3["sy"] != 0) & (df3["ly"] == 0))]
     # df3 = df3.sort_values(by="sx", ascending=True)
@@ -71,9 +75,11 @@ def wiring_rect_below2above(dist: float, df: pd.DataFrame, df2: pd.DataFrame) ->
 def plotter_rect(df: pd.DataFrame, line_width: float, dist: float, save_folder: str = './results/') -> pd.DataFrame:
     df2 = wiring_rect_below(dist, df)
     # df2.to_excel(save_folder + "fiberBoard826data.xlsx")
-    df4 = wiring_rect_above(dist, df)
+    # df4 = wiring_rect_above(dist, df)
     df3 = wiring_rect_below2above(dist, df, df2)
-    df = pd.concat([df2, df4, df3], axis=0)
+    # df = pd.concat([df2, df4, df3], axis=0)
+    # df = pd.concat([df2, df4], axis=0)
+    df = df3
     # df.to_excel(save_folder + "fiberBoard826data.xlsx")
 
     '''
