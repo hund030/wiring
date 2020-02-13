@@ -151,16 +151,71 @@ def create_sim_space_826(file_name: str = "./fiberBoard826.xls", save_folder: st
     def layout_ln(x):
         return x.SN_LN[1]
 
+    def find_next(value: int, l: list, reverse: bool) -> int:
+        length = len(l)
+        for i in range(length):
+            i = length - i - 1 if reverse else i
+            if l[i] == value:
+                return i
+        # didn't find the value
+        print("didn't find the value %d, in "%(value), l)
+        return -1
+
     def sn_posx(x):
+        idx = find_next(x.index2, PORTS[x.index1], False)
+        PORTS[x.index1][idx] = -1
         base_x = above_dist[above_list.index(x.Port1)] if x.Port1 in above_list else below_dist[below_list.index(x.Port1)]
-        return base_x + (x.SN%channel_num - channel_num / 2) * (line_dist + line_width)
+        return base_x + idx * (line_dist + line_width)
 
     def ln_posx(x):
+        idx = find_next(x.index1, PORTS[x.index2], x.sy==x.ly)
+        PORTS[x.index2][idx] = -1
         base_x = above_dist[above_list.index(x.Port2)] if x.Port2 in above_list else below_dist[below_list.index(x.Port2)]
         return base_x + (x.LN%channel_num - channel_num / 2) * (line_dist + line_width)
 
+    PORTS = [[] for j in range(len(below_list)+len(above_list))]
+    def calc_sn_ln(x):
+        PORTS[x.index1].append(x.index2)
+        PORTS[x.index2].append(x.index1)
+        return None
+
+    def coarse_sort(PORTS):
+        for i, l in enumerate(PORTS):
+            left = []
+            center = []
+            right = []
+            if i < len(above_list):
+                for it in l:
+                    if it < i:
+                        left.append(it)
+                    elif it > i and it < len(above_list):
+                        right.append(it)
+                    elif it >= len(above_list) and it < len(above_list) + len(below_list):
+                        center.append(it)
+                    else:
+                        # TODO:: throw exception
+                        print("Port error")
+            else:
+                for it in l:
+                    if it < len(above_list):
+                        center.append(it)
+                    elif it < i:
+                        left.append(it)
+                    elif it > i and it < len(above_list) + len(below_list):
+                        right.append(it)
+                    else:
+                        # TODO:: throw exception
+                        print("Port error")
+            PORTS[i] = np.sort(left).tolist() + np.sort(center).tolist() + np.sort(right)[::-1].tolist()
+        return PORTS
+
+    
     data["Port1"] = pd.to_numeric(data["Port1"].str.split(':', expand=True)[0].str[1:])
     data["Port2"] = pd.to_numeric(data["Port2"].str.split(':', expand=True)[0].str[1:])
+
+    data["index1"] = data.apply(lambda x: above_list.index(x.Port1) if x.Port1 in above_list else below_list.index(x.Port1) + len(above_list), axis=1)
+    data["index2"] = data.apply(lambda x: above_list.index(x.Port2) if x.Port2 in above_list else below_list.index(x.Port2) + len(above_list), axis=1)
+
     # hard code 100 height here
     data["sy"] = data.apply(lambda x: BeginPointY+100 if x.Port1 in above_list else BeginPointY, axis=1)
     data["ly"] = data.apply(lambda x: BeginPointY+100 if x.Port2 in above_list else BeginPointY, axis=1)
@@ -168,18 +223,40 @@ def create_sim_space_826(file_name: str = "./fiberBoard826.xls", save_folder: st
     data["SN_LN"] = data.apply(lambda x: layout_sn_ln(x), axis=1)
     data["SN"] = data.apply(lambda x: layout_sn(x), axis=1)
     data["LN"] = data.apply(lambda x: layout_ln(x), axis=1)
+    data["dz"] = data.apply(lambda x: int(x.SN / channel_num), axis=1)
+
+    # select the 1st layer
+    data = data[(data["dz"] == 0)]
+
+    data.apply(lambda x: calc_sn_ln(x), axis=1)
+    PORTS = coarse_sort(PORTS)
+
+    '''
+    data2 = data.copy()
+    data2.loc[:, ["Port2", "Port1", "LN", "SN", "ly", "sy"]] = data2.loc[:, ["Port1", "Port2", "SN", "LN", "sy", "ly"]].values
+    data = pd.concat([data, data2], axis=0)
+    '''
+
+    '''
+    for i in range(0, len(above_list) + len(below_list)):
+        it = data.loc[(data["index1"] == i)]
+        it = it.sort_values(by="index2", ascending=True)
+        # for c in range(0, channel_num):
+            # it.iloc(c)
+    '''
 
     data["sx"] = data.apply(lambda x: sn_posx(x), axis=1)
     data["lx"] = data.apply(lambda x: ln_posx(x), axis=1)
+    data["dx"] = data.apply(lambda x: np.abs(x.sx - x.lx), axis=1)
     # switch port1 and port2 if port2 is at the right of port1.
     idx = (data["sx"] < data["lx"])
     data.loc[idx, ["Port1", "Port2", "SN", "LN", "sy", "ly", "sx", "lx"]] = data.loc[idx, ["Port2", "Port1", "LN", "SN", "ly", "sy", "lx", "sx"]].values
-    data["dx"] = data.apply(lambda x: x.sx - x.lx, axis=1)
     idx = (data["ly"] < data["sy"])
     data.loc[idx, ["Port1", "Port2", "SN", "LN", "sy", "ly", "sx", "lx"]] = data.loc[idx, ["Port2", "Port1", "LN", "SN", "ly", "sy", "lx", "sx"]].values
-    data["dz"] = data.apply(lambda x: int(x.SN / channel_num), axis=1)
+    
     #data = data.sort_values(by="dx", ascending=True)
 
-    data.to_excel(save_folder + "fiberBoard826data.xlsx")
+
+    data.to_excel("./fiberBoard0data.xlsx")
 
     return data
