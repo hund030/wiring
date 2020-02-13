@@ -83,10 +83,10 @@ def create_sim_space_826(file_name: str = "./fiberBoard826.xls", save_folder: st
     # zoom_factor_y = 100.0 / 70
 
     above_list = [29, 26, 24, 20, 21, 18, 19, 16, 17,  2, 14, 15, 12, 13, 10, 11,  8,  9,  1,  6,  7]
-    above_dist = [8, 16,  4, 4, 4, 14.8,  4,  4,  4,8.7,  4,  4,  4, 4, 11.8,  4,  4,  4,8.7,  4,  4]
+    above_dist = [ 2,  4,  4,  4,  4, 14,  4,  4,  4,  4, 14,  4,  4, 4,  14,  4,  4,  4, 14,  4,  4]
     # switch port 41 and port 42
     below_list = [59, 53, 54, 55, 56, 57, 58, 52, 47, 48, 49, 50, 51, 43, 44, 45, 46, 41, 42, 39, 38, 33, 32, 31, 30]
-    below_dist = [ 1,  4,  4,  4,  4,  4,  4, 13, 4,  4,  8,  4,  4,  4,  4,  4,  4,  4.7,  4, 12,  6, 12,  4,  4,  4]
+    below_dist = [ 2,  4,  4,  4,  4,  4,  4, 14,  4,  4,  4,  4,  4,  4,  4,  4,  4,  8,  4,  8,  4,  8,  4,  4,  4]
     # above_dist = np.cumsum(above_dist) * zoom_factor_x
     # below_dist = np.cumsum(below_dist) * zoom_factor_x
     above_dist = np.cumsum(above_dist)
@@ -175,11 +175,10 @@ def create_sim_space_826(file_name: str = "./fiberBoard826.xls", save_folder: st
     idx = (data["sx"] < data["lx"])
     data.loc[idx, ["Port1", "Port2", "SN", "LN", "sy", "ly", "sx", "lx"]] = data.loc[idx, ["Port2", "Port1", "LN", "SN", "ly", "sy", "lx", "sx"]].values
     data["dx"] = data.apply(lambda x: x.sx - x.lx, axis=1)
-
     idx = (data["ly"] < data["sy"])
     data.loc[idx, ["Port1", "Port2", "SN", "LN", "sy", "ly", "sx", "lx"]] = data.loc[idx, ["Port2", "Port1", "LN", "SN", "ly", "sy", "lx", "sx"]].values
     data["dz"] = data.apply(lambda x: int(x.SN / channel_num), axis=1)
-    # data = data.sort_values(by="dx", ascending=True)
+    #data = data.sort_values(by="dx", ascending=True)
 
     data.to_excel(save_folder + "fiberBoard826data.xlsx")
 

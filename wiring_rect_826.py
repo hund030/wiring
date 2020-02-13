@@ -75,11 +75,11 @@ def wiring_rect_below2above(dist: float, df: pd.DataFrame, df2: pd.DataFrame) ->
 def plotter_rect(df: pd.DataFrame, line_width: float, dist: float, save_folder: str = './results/') -> pd.DataFrame:
     df2 = wiring_rect_below(dist, df)
     # df2.to_excel(save_folder + "fiberBoard826data.xlsx")
-    # df4 = wiring_rect_above(dist, df)
+    df4 = wiring_rect_above(dist, df)
     df3 = wiring_rect_below2above(dist, df, df2)
-    # df = pd.concat([df2, df4, df3], axis=0)
+    df = pd.concat([df2, df4, df3], axis=0)
     # df = pd.concat([df2, df4], axis=0)
-    df = df3
+    # df = df3
     # df.to_excel(save_folder + "fiberBoard826data.xlsx")
 
     '''
