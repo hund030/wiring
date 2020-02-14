@@ -163,6 +163,7 @@ def plotter_bend(df_rect: pd.DataFrame, line_width: float, dist: float, bend_rad
                 arc_y_list = list(
                     center_list[k][1] + bend_radius * np.sin(np.arange(theta_list[k][0], theta_list[k][1], delta_arc)))
                 ax.plot(arc_x_list, arc_y_list, color=color[layer], linewidth=line_width, alpha=0.8)
+    plt.axis('scaled')
 
     fig.savefig(save_folder+'fiberBoard826bend.svg', dpi=3000, format='svg')
     fig.savefig(save_folder+'fiberBoard826bend.pdf', dpi=3000, format='pdf')

@@ -83,10 +83,10 @@ def create_sim_space_826(file_name: str = "./fiberBoard826.xls", save_folder: st
     # zoom_factor_y = 100.0 / 70
 
     above_list = [29, 26, 24, 20, 21, 18, 19, 16, 17,  2, 14, 15, 12, 13, 10, 11,  8,  9,  1,  6,  7]
-    above_dist = [ 2,  4,  4,  4,  4, 14,  4,  4,  4,  4, 14,  4,  4, 4,  14,  4,  4,  4, 14,  4,  4]
+    above_dist = [ 6,  8,  8,  8,  8, 16,  8,  8,  8,  8, 16,  8,  8, 8,  16,  8,  8,  8, 16,  8,  8]
     # switch port 41 and port 42
     below_list = [59, 53, 54, 55, 56, 57, 58, 52, 47, 48, 49, 50, 51, 43, 44, 45, 46, 41, 42, 39, 38, 33, 32, 31, 30]
-    below_dist = [ 2,  4,  4,  4,  4,  4,  4, 14,  4,  4,  4,  4,  4,  4,  4,  4,  4,  8,  4,  8,  4,  8,  4,  4,  4]
+    below_dist = [ 2,  8,  8,  8,  8,  8,  8, 16,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8]
     # above_dist = np.cumsum(above_dist) * zoom_factor_x
     # below_dist = np.cumsum(below_dist) * zoom_factor_x
     above_dist = np.cumsum(above_dist)
@@ -171,7 +171,7 @@ def create_sim_space_826(file_name: str = "./fiberBoard826.xls", save_folder: st
         idx = find_next(x.index1, PORTS[x.index2], x.sy==x.ly)
         PORTS[x.index2][idx] = -1
         base_x = above_dist[above_list.index(x.Port2)] if x.Port2 in above_list else below_dist[below_list.index(x.Port2)]
-        return base_x + (x.LN%channel_num - channel_num / 2) * (line_dist + line_width)
+        return base_x + idx * (line_dist + line_width)
 
     PORTS = [[] for j in range(len(below_list)+len(above_list))]
     def calc_sn_ln(x):
@@ -250,11 +250,11 @@ def create_sim_space_826(file_name: str = "./fiberBoard826.xls", save_folder: st
     data["dx"] = data.apply(lambda x: np.abs(x.sx - x.lx), axis=1)
     # switch port1 and port2 if port2 is at the right of port1.
     idx = (data["sx"] < data["lx"])
-    data.loc[idx, ["Port1", "Port2", "SN", "LN", "sy", "ly", "sx", "lx"]] = data.loc[idx, ["Port2", "Port1", "LN", "SN", "ly", "sy", "lx", "sx"]].values
-    idx = (data["ly"] < data["sy"])
-    data.loc[idx, ["Port1", "Port2", "SN", "LN", "sy", "ly", "sx", "lx"]] = data.loc[idx, ["Port2", "Port1", "LN", "SN", "ly", "sy", "lx", "sx"]].values
+    data.loc[idx, ["Port1", "Port2","index1", "index2", "SN", "LN", "sy", "ly", "sx", "lx"]] = data.loc[idx, ["Port2", "Port1", "index2", "index1", "LN", "SN", "ly", "sy", "lx", "sx"]].values
+    # idx = (data["ly"] < data["sy"])
+    # data.loc[idx, ["Port1", "Port2", "index1", "index2", "SN", "LN", "sy", "ly", "sx", "lx"]] = data.loc[idx, ["Port2", "Port1", "index2", "index1", "LN", "SN", "ly", "sy", "lx", "sx"]].values
     
-    #data = data.sort_values(by="dx", ascending=True)
+    data = data.sort_values(by="sx", ascending=True)
 
 
     data.to_excel("./fiberBoard0data.xlsx")
