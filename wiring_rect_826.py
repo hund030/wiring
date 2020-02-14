@@ -12,6 +12,7 @@ def wiring_rect_below(dist: float, df: pd.DataFrame) -> pd.DataFrame:
 
     df2 = df.copy()
     df2 = df2[(df2["sy"]==0) & (df2["ly"]==0)]
+    # df2 = df2.sort_values(by=["index2", "sx"], ascending=[False, True])
 
     list_inflection = [(i * dist + interface_length for i in range(df2[df2["dz"] == layer].shape[0])) for layer in range(4)]
     df2['inflection'] = df2.apply(lambda x: next(list_inflection[x.dz]), axis=1)
@@ -35,6 +36,7 @@ def wiring_rect_above(dist: float, df: pd.DataFrame) -> pd.DataFrame:
 
     df4 = df.copy()
     df4 = df4[(df4["sy"]!=0) & (df4["ly"]!=0)]
+    # df4 = df4.sort_values(by=["index2", "sx"], ascending=[False, True])
 
     list_inflection = [(100 - (i * dist + interface_length) for i in range(df4[df4["dz"]==layer].shape[0])) for layer in range(4)]
     df4['inflection'] = df4.apply(lambda x: next(list_inflection[x.dz]), axis=1)
@@ -71,7 +73,7 @@ def wiring_rect_below2above(dist: float, df: pd.DataFrame, df4: pd.DataFrame) ->
     df3['inflection_y'] = df3.apply(lambda x: f_inflection_y(x), axis=1)
     return df3
 
-def wiring_rect_above2below(dist: float, df: pd.DataFrame, df2: pd.DataFrame) -> pd.DataFrame:
+def wiring_rect_above2below(dist: float, df: pd.DataFrame, df3: pd.DataFrame, df4: pd.DataFrame) -> pd.DataFrame:
     def f_inflection_x(x):
         if x.dx == 0:
             return list([x.sx, x.lx])
@@ -86,14 +88,15 @@ def wiring_rect_above2below(dist: float, df: pd.DataFrame, df2: pd.DataFrame) ->
 
     def f_inflection(x):
         gap = [((i + df2[df2["dz"]==layer].shape[0]) * dist + interface_length for i in range(df5[df5["dz"]==layer].shape[0])) for layer in range(4)]
-        list_inflection = [((i + df2[df2["dz"]==layer].shape[0]) * dist + interface_length for i in range(df5[df5["dz"]==layer].shape[0])) for layer in range(4)]
+        # list_inflection = [((i + df2[df2["dz"]==layer].shape[0]) * dist + interface_length for i in range(df5[df5["dz"]==layer].shape[0])) for layer in range(4)]
+        list_inflection = [((i + df3[df3["dz"]==layer].shape[0] + df4[df4["dz"==layer].shape[0]]) * dist + interface_length for i in range(df5[df5["dz"]==layer].shape[0])) for layer in range(4)]
 
     df5 = df.copy()
     df5 = df5[(df5["sy"] != 0) & (df5["ly"] == 0)]
-    df5 = df5.sort_values(by="sx", ascending=False)
+    df5 = df5.sort_values(by="sx", ascending=True)
 
     # list_inflection = [((i + df2[df2["dz"]==layer].shape[0]) * dist + interface_length for i in range(df3[df3["dz"]==layer].shape[0])) for layer in range(4)]
-    list_inflection = [((i + df2.shape[0]) * dist + interface_length for i in range(df5.shape[0]))]
+    list_inflection = [(100 - ((i + df3.shape[0] + df4.shape[0]) * dist + interface_length) for i in range(df5.shape[0]))]
     df5['inflection'] = df5.apply(lambda x: next(list_inflection[x.dz]), axis=1)
     df5['inflection_x'] = df5.apply(lambda x: f_inflection_x(x), axis=1)
     df5['inflection_y'] = df5.apply(lambda x: f_inflection_y(x), axis=1)
@@ -104,7 +107,7 @@ def plotter_rect(df: pd.DataFrame, line_width: float, dist: float, save_folder: 
     # df2.to_excel(save_folder + "fiberBoard826data.xlsx")
     df4 = wiring_rect_above(dist, df)
     df3 = wiring_rect_below2above(dist, df, df4)
-    df5 = wiring_rect_above2below(dist, df, df2)
+    df5 = wiring_rect_above2below(dist, df, df3, df4)
     df = pd.concat([df2, df4, df3, df5], axis=0)
     # df = pd.concat([df2, df4], axis=0)
     # df = df3
