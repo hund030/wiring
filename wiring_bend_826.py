@@ -73,12 +73,12 @@ def plotter_bend(df_rect: pd.DataFrame, line_width: float, dist: float, bend_rad
         center_list = []
         for i in range(len(x.dir)):
             if x.dx >= 10:
-                center_list.append(tuple(
-                    np.array([x.inflection_x[i + 1], x.inflection_y[i + 1]]) + bend_radius*np.array(x.dir[i])))
+                center_list.append(tuple(np.round(
+                    np.array([x.inflection_x[i + 1], x.inflection_y[i + 1]]) + bend_radius*np.array(x.dir[i]),1)))
             else:
                 # TODO:only match to this situation
-                center_list.append(tuple(
-                    np.array([x.bend_x[i*(len(x.bend_x)-1)] + bend_radius*x.dir[i][0], x.bend_y[i*(len(x.bend_y)-1)]])))
+                center_list.append(tuple(np.round(
+                    np.array([x.bend_x[i*(len(x.bend_x)-1)] + bend_radius*x.dir[i][0], x.bend_y[i*(len(x.bend_y)-1)]]),1)))
 
         return center_list
 

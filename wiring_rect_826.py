@@ -1,7 +1,7 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 
-interface_length = 5
+interface_length = 7
 
 def wiring_rect_below(dist: float, df: pd.DataFrame) -> pd.DataFrame:
     def f_inflection_x(x):
@@ -93,7 +93,7 @@ def wiring_rect_above2below(dist: float, df: pd.DataFrame, df3: pd.DataFrame, df
 
     df5 = df.copy()
     df5 = df5[(df5["sy"] != 0) & (df5["ly"] == 0)]
-    df5 = df5.sort_values(by=["index2", "sx"], ascending=[True, True])
+    df5 = df5.sort_values(by="sx", ascending=True)
 
     # list_inflection = [((i + df2[df2["dz"]==layer].shape[0]) * dist + interface_length for i in range(df3[df3["dz"]==layer].shape[0])) for layer in range(4)]
     list_inflection = [(100 - ((i + df3.shape[0] + df4.shape[0]) * dist + interface_length) for i in range(df5.shape[0]))]
