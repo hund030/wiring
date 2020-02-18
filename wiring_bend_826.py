@@ -96,6 +96,7 @@ def plotter_bend(df_rect: pd.DataFrame, line_width: float, dist: float, bend_rad
     df["bend_y"] = df.apply(bend_y_list, axis=1)
     df["center"] = df.apply(center_list, axis=1)
 
+    '''
     color = ['r', 'b', 'm', 'c']
     for layer in range(4):
         fig = plt.figure()
@@ -131,6 +132,7 @@ def plotter_bend(df_rect: pd.DataFrame, line_width: float, dist: float, bend_rad
 
         fig.savefig(save_folder+'fiberBoard826bend' + str(layer) + '.svg', dpi=3000, format='svg')
         fig.savefig(save_folder+'fiberBoard826bend' + str(layer) + '.pdf', dpi=3000, format='pdf')
+    '''
 
     fig = plt.figure()
     ax = plt.gca()
@@ -165,6 +167,7 @@ def plotter_bend(df_rect: pd.DataFrame, line_width: float, dist: float, bend_rad
                 ax.plot(arc_x_list, arc_y_list, color=color[layer], linewidth=line_width, alpha=0.8)
     plt.axis('scaled')
 
+    print("******** Output Routed waveguides to svg file and pdf file ********")
     fig.savefig(save_folder+'fiberBoard826bend.svg', dpi=3000, format='svg')
     fig.savefig(save_folder+'fiberBoard826bend.pdf', dpi=3000, format='pdf')
 

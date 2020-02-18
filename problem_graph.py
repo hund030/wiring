@@ -79,16 +79,14 @@ def create_sim_space_826(file_name: str = "./fiberBoard826.xls", save_folder: st
     BeginPointY = 0
     BeginPointZ = 0
 
-    # zoom_factor_x = 130.0 / 450
-    # zoom_factor_y = 100.0 / 70
-
-    above_list = [29, 26, 24, 20, 21, 18, 19, 16, 17, 10,  2, 14, 12, 13, 15,  8,  9,  1,  6,  7]
+    # serial number for each port 
+    above_list = [29, 26, 24, 20, 21, 18, 19, 16, 17, 10, 2, 14, 12, 13, 15, 8, 9, 1, 6, 7]
+    # distance to the previous port
     above_dist = [ 5,  6,  6,  6,  6, 16,  6,  6,  6,  6, 16,  6,  6,  6,  6, 16,  6,  6,  6,  6]
-    # switch port 41 and port 42
+    # serial number for each port 
     below_list = [59, 53, 54, 55, 56, 57, 58, 47, 48, 49, 50, 51, 43, 44, 45, 46, 41, 42, 11, 38, 39, 33, 32, 31, 30]
+    # distance to the previous port
     below_dist = [ 2,  6,  6,  6,  6, 16,  6,  6,  6,  6, 16,  6,  6,  6,  6, 16,  6,  6,  6,  6, 16,  6,  6,  6,  6]
-    # above_dist = np.cumsum(above_dist) * zoom_factor_x
-    # below_dist = np.cumsum(below_dist) * zoom_factor_x
     above_dist = np.cumsum(above_dist)
     below_dist = np.cumsum(below_dist)
 
@@ -96,10 +94,7 @@ def create_sim_space_826(file_name: str = "./fiberBoard826.xls", save_folder: st
 
     def find_next_0(l, st):
         x = next((i+layer*channel_num for i in range(st, st+channel_num) for layer in range(int((channel_num*4-st)/12)) if l[i+layer*channel_num] == 0), None)
-        # print("st", st, "x", x)
-        # x = next((i for i, x in enumerate(l[st:]) if x == 0), None)
         if x != None:
-            # return x + st
             return x
         else:
             print(channels.index(l))
@@ -128,19 +123,6 @@ def create_sim_space_826(file_name: str = "./fiberBoard826.xls", save_folder: st
 
     def layout_sn_ln(x):
         p1, p2 = find_pair(channels[x.Port1], channels[x.Port2], x.sy == x.ly)
-        # find the 1st '0' in the list
-        # p1 = find_next_0(channels[x.Port1], 0)
-        # p2 = find_next_0(channels[x.Port2], 0)
-        '''
-        #TODO::maybe dead loop here, caution!!
-        while int(p1/channel_num) != int(p2/channel_num):
-            print(p1, p2)
-            if int(p1/channel_num) < int(p2/channel_num):
-                p2 = find_next_0(channels[x.Port2], p2-channel_num+1)
-            elif int(p1/channel_num) > int(p2/channel_num):
-                p1 = find_next_0(channels[x.Port1], p1-channel_num+1)
-        '''
-        # print(x.Port1, p1, x.Port2, p2)
         channels[x.Port1][p1] = 1
         channels[x.Port2][p2] = 1
         return (p1, p2)
@@ -228,25 +210,8 @@ def create_sim_space_826(file_name: str = "./fiberBoard826.xls", save_folder: st
     # data["dz"] = data.apply(lambda x: int(x.SN / channel_num), axis=1)
     data["dz"] = data.apply(lambda x: 0, axis=1)
 
-    # select the 1st layer
-    # data = data[(data["dz"] == 0)]
-
     data.apply(lambda x: calc_sn_ln(x), axis=1)
     PORTS = coarse_sort(PORTS)
-
-    '''
-    data2 = data.copy()
-    data2.loc[:, ["Port2", "Port1", "LN", "SN", "ly", "sy"]] = data2.loc[:, ["Port1", "Port2", "SN", "LN", "sy", "ly"]].values
-    data = pd.concat([data, data2], axis=0)
-    '''
-
-    '''
-    for i in range(0, len(above_list) + len(below_list)):
-        it = data.loc[(data["index1"] == i)]
-        it = it.sort_values(by="index2", ascending=True)
-        # for c in range(0, channel_num):
-            # it.iloc(c)
-    '''
 
     data["sx"] = data.apply(lambda x: sn_posx(x), axis=1)
     data["lx"] = data.apply(lambda x: ln_posx(x), axis=1)
@@ -254,11 +219,8 @@ def create_sim_space_826(file_name: str = "./fiberBoard826.xls", save_folder: st
     # switch port1 and port2 if port2 is at the right of port1.
     idx = (data["sx"] < data["lx"])
     data.loc[idx, ["Port1", "Port2","index1", "index2", "SN", "LN", "sy", "ly", "sx", "lx"]] = data.loc[idx, ["Port2", "Port1", "index2", "index1", "LN", "SN", "ly", "sy", "lx", "sx"]].values
-    # idx = (data["ly"] < data["sy"])
-    # data.loc[idx, ["Port1", "Port2", "index1", "index2", "SN", "LN", "sy", "ly", "sx", "lx"]] = data.loc[idx, ["Port2", "Port1", "index2", "index1", "LN", "SN", "ly", "sy", "lx", "sx"]].values
     
     data = data.sort_values(by="sx", ascending=True)
-
 
     data.to_excel("./fiberBoard0data.xlsx")
 

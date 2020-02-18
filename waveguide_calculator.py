@@ -3,8 +3,12 @@ import numpy as np
 from numpy.linalg import norm
 import ast
 
+# min_angle = 90
 def calc_index(data: pd.DataFrame, line_width: float, bend_radius: float, plain_square: float) -> pd.DataFrame:
+    # calculate different index for the routed waveguide board
+
     def calc_length(x):
+        # calculate the length for each waveguide
         if x.dx < 2 * bend_radius:
             theta = np.arccos((bend_radius - x.dx * 0.5) / bend_radius)
             bend_length = 2 * bend_radius * theta
@@ -20,6 +24,7 @@ def calc_index(data: pd.DataFrame, line_width: float, bend_radius: float, plain_
         return a[0] * b[1] - a[1] * b[0]
     
     def is_fall_on(p, line):
+        # check if the point p fall on the line
         return p[0] >= min(line[0][0], line[1][0]) and p[0] <= max(line[0][0], line[1][0]) and \
                p[1] >= min(line[0][1], line[1][1]) and p[1] <= max(line[0][1], line[1][1])
 
@@ -53,7 +58,7 @@ def calc_index(data: pd.DataFrame, line_width: float, bend_radius: float, plain_
             p2 = np.asarray(line[1])
             d = np.abs(np.cross(p2 - p1, p1 - p0) / norm(p2 - p1))
             if d < bend_radius:
-                return np.round(np.arccos(d/bend_radius), 4)
+                return np.round(np.arccos(d/bend_radius)/np.pi*180)
             else:
                 return 0
         
@@ -62,7 +67,7 @@ def calc_index(data: pd.DataFrame, line_width: float, bend_radius: float, plain_
             p2 = np.asarray(center2)
             d = norm(p1 - p2)
             if d < 2 * bend_radius:
-                return np.round(np.arccos(1 - d ** 2 / (2 * bend_radius ** 2)), 4)
+                return np.round(np.arccos(1-d**2/(2*bend_radius**2))/np.pi*180)
             else:
                 return 0
 
@@ -85,7 +90,7 @@ def calc_index(data: pd.DataFrame, line_width: float, bend_radius: float, plain_
                             3: line_to_arc(center1[0], line2, 3) if line1[0][1] == 0 or line1[0][1] == 100 else line_to_arc(center1[1], line2, -3),
                             4: arc_to_arc(center2[0], center1[0], 4) if line1[0][1] == 0 or line1[0][1] == 100 else arc_to_arc(center2[0], center1[1], 4),
                             5: arc_to_arc(center2[1], center1[0], 5) if line1[0][1] == 0 or line1[0][1] == 100 else arc_to_arc(center2[1], center1[1], 5),
-                            0: np.round(np.pi/2, 4),
+                            0: 90,
                         }[is_across_at_bend(p, line1, line2)]
             return None
 
@@ -96,37 +101,24 @@ def calc_index(data: pd.DataFrame, line_width: float, bend_radius: float, plain_
 
         points = [f(lines, row.center, r[0], r[1], r[2]) for r in data[["inflection_x", "inflection_y", "center"]].values]
         points = [p for p in points if p != None]
-        '''
-        for index, row in data.iterrows():
-            if index == x.name:
-                continue
-            for i in range(len(row.inflection_x) - 1):
-                for line1 in lines:
-                    # ok shows is there an intersection, p indicates the intersection
-                    line2 = ((row.inflection_x[i], row.inflection_y[i]), (row.inflection_x[i + 1], row.inflection_y[i + 1]))
-                    ok, p = is_cross(line1, line2)
-                    if ok:
-                        points.append(p)
-        '''
+
         if 0 in points:
             print(points)
+        # global min_angle
+        # min_angle = min(min(points), min_angle)
         return points
     
-    '''
-    data["inflection_x"] = data.apply(lambda x: x.inflection_x[1:-1].split(','), axis=1)
-    data["inflection_x"] = data.apply(lambda x: [float(v) for v in x.inflection_x], axis=1)
-    data["inflection_y"] = data.apply(lambda x: x.inflection_y[1:-1].split(','), axis=1)
-    data["inflection_y"] = data.apply(lambda x: [float(v) for v in x.inflection_y], axis = 1)
-    '''
     data["inflection_x"] = data.apply(lambda x: ast.literal_eval(x.inflection_x), axis=1)
     data["inflection_y"] = data.apply(lambda x: ast.literal_eval(x.inflection_y), axis=1)
     data["center"] = data.apply(lambda x: ast.literal_eval(x.center), axis=1)
     data = data.sort_values(by="inflection", ascending=True)
     data["length"] = data.apply(lambda x: np.round(calc_length(x), 4), axis=1)
     bg_density = np.round(np.sum(data["length"]) * line_width / plain_square, 4)
-    # print(bg_density)
-    data["anglss"] = data.apply(lambda x: calc_crossing(x), axis = 1)
-    data["crossing"] = data.apply(lambda x: len(x.anglss), axis = 1)
+    print(bg_density)
+    data["angles"] = data.apply(lambda x: calc_crossing(x), axis = 1)
+    data["crossing"] = data.apply(lambda x: len(x.angles), axis = 1)
+    print("******** Output the data to excel file ********")
     data.to_excel("fiberBoard256calc.xlsx")
+    # print(min_angle)
     
     return data
