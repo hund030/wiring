@@ -66,7 +66,6 @@ def wiring_rect_below2above(dist: float, df: pd.DataFrame, df4: pd.DataFrame) ->
     df3 = df3[(df3["sy"] == 0) & (df3["ly"] != 0)]
     df3 = df3.sort_values(by="sx", ascending=False)
 
-    # list_inflection = [((i + df2[df2["dz"]==layer].shape[0]) * dist + interface_length for i in range(df3[df3["dz"]==layer].shape[0])) for layer in range(4)]
     list_inflection = [(100 - ((i + df4.shape[0]) * dist + interface_length) for i in range(df3.shape[0]))]
     df3['inflection'] = df3.apply(lambda x: next(list_inflection[x.dz]), axis=1)
     df3['inflection_x'] = df3.apply(lambda x: f_inflection_x(x), axis=1)
@@ -88,14 +87,12 @@ def wiring_rect_above2below(dist: float, df: pd.DataFrame, df3: pd.DataFrame, df
 
     def f_inflection(x):
         gap = [((i + df2[df2["dz"]==layer].shape[0]) * dist + interface_length for i in range(df5[df5["dz"]==layer].shape[0])) for layer in range(4)]
-        # list_inflection = [((i + df2[df2["dz"]==layer].shape[0]) * dist + interface_length for i in range(df5[df5["dz"]==layer].shape[0])) for layer in range(4)]
         list_inflection = [((i + df3[df3["dz"]==layer].shape[0] + df4[df4["dz"==layer].shape[0]]) * dist + interface_length for i in range(df5[df5["dz"]==layer].shape[0])) for layer in range(4)]
 
     df5 = df.copy()
     df5 = df5[(df5["sy"] != 0) & (df5["ly"] == 0)]
     df5 = df5.sort_values(by="sx", ascending=True)
 
-    # list_inflection = [((i + df2[df2["dz"]==layer].shape[0]) * dist + interface_length for i in range(df3[df3["dz"]==layer].shape[0])) for layer in range(4)]
     list_inflection = [(100 - ((i + df3.shape[0] + df4.shape[0]) * dist + interface_length) for i in range(df5.shape[0]))]
     df5['inflection'] = df5.apply(lambda x: next(list_inflection[x.dz]), axis=1)
     df5['inflection_x'] = df5.apply(lambda x: f_inflection_x(x), axis=1)
@@ -104,7 +101,6 @@ def wiring_rect_above2below(dist: float, df: pd.DataFrame, df3: pd.DataFrame, df
 
 def plotter_rect(df: pd.DataFrame, line_width: float, dist: float, save_folder: str = './results/') -> pd.DataFrame:
     df2 = wiring_rect_below(dist, df)
-    # df2.to_excel(save_folder + "fiberBoard826data.xlsx")
     df4 = wiring_rect_above(dist, df)
     df3 = wiring_rect_below2above(dist, df, df4)
     df5 = wiring_rect_above2below(dist, df, df3, df4)
@@ -112,64 +108,6 @@ def plotter_rect(df: pd.DataFrame, line_width: float, dist: float, save_folder: 
     # df = pd.concat([df2, df4], axis=0)
     # df = df3
     # df.to_excel(save_folder + "fiberBoard826data.xlsx")
-
-    '''
-    color = ['r', 'b', 'm', 'c']
-    for layer in range(4):
-        fig = plt.figure()
-        ax = plt.gca()
-
-        ax.set_xlabel('x')
-        ax.set_ylabel('y')
-
-        for i in range(df[df['dz'] == layer].shape[0]):
-            x_list = df3['inflection_x'].tolist()[i]
-            y_list = df3['inflection_y'].tolist()[i]
-            ax.plot(x_list, y_list, color='y', linewidth=line_width, alpha=0.8)
-
-        fig.savefig(save_folder+'fiberBoard826bend' + str(layer) + '.svg', dpi=3000, format='svg')
-        fig.savefig(save_folder+'fiberBoard826bend' + str(layer) + '.pdf', dpi=3000, format='pdf')
-
-    fig = plt.figure()
-    ax = plt.gca()
-    ax.set_xlabel('x')
-    ax.set_ylabel('y')
-    for i in range(df2.shape[0]):
-        x_list = df2['inflection_x'].tolist()[i]
-        y_list = df2['inflection_y'].tolist()[i]
-        ax.plot(x_list, y_list, color='r', linewidth=line_width, alpha=0.8)
-    fig.savefig(save_folder + 'fiberBoard826_below.pdf', dpi=3000, format='pdf')
-
-    fig = plt.figure()
-    ax = plt.gca()
-    ax.set_xlabel('x')
-    ax.set_ylabel('y')
-    for i in range(df3.shape[0]):
-        x_list = df3['inflection_x'].tolist()[i]
-        y_list = df3['inflection_y'].tolist()[i]
-        ax.plot(x_list, y_list, color='y', linewidth=line_width, alpha=0.8)
-    fig.savefig(save_folder + 'fiberBoard826_below_above.pdf', dpi=3000, format='pdf')
-
-    fig = plt.figure()
-    ax = plt.gca()
-    ax.set_xlabel('x')
-    ax.set_ylabel('y')
-    for i in range(df4.shape[0]):
-        x_list = df4['inflection_x'].tolist()[i]
-        y_list = df4['inflection_y'].tolist()[i]
-        ax.plot(x_list, y_list, color='b', linewidth=line_width, alpha=0.8)
-    fig.savefig(save_folder + 'fiberBoard826_above.pdf', dpi=3000, format='pdf')
-
-    fig = plt.figure()
-    ax = plt.gca()
-    ax.set_xlabel('x')
-    ax.set_ylabel('y')
-    for i in range(df5.shape[0]):
-        x_list = df5['inflection_x'].tolist()[i]
-        y_list = df5['inflection_y'].tolist()[i]
-        ax.plot(x_list, y_list, color='g', linewidth=line_width, alpha=0.8)
-    fig.savefig(save_folder + 'fiberBoard826_above_below.pdf', dpi=3000, format='pdf')
-    '''
 
     fig = plt.figure()
     ax = plt.gca()
