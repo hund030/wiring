@@ -80,26 +80,18 @@ def create_sim_space_826(file_name: str = "./fiberBoard826.xls", save_folder: st
     BeginPointZ = 0
 
     # serial number for each port 
-    above_list = [29, 26, 24, 20, 21, 18, 19, 16, 17, 10, 2, 14, 12, 13, 15, 8, 9, 1, 6, 7]
+    above_list = [29, 26, 21, 20, 24, 18, 19, 16, 17, 10, 2, 14, 12, 13, 8, 9]
     # distance to the previous port
-    above_dist = [ 5,  6,  6,  6,  6, 16,  6,  6,  6,  6, 16,  6,  6,  6,  6, 16,  6,  6,  6,  6]
+    above_dist = [ 7,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8]
     # serial number for each port 
-    below_list = [59, 53, 54, 55, 56, 57, 58, 47, 48, 49, 50, 51, 43, 44, 45, 46, 41, 42, 11, 38, 39, 33, 32, 31, 30]
+    below_list = [53, 54, 56, 57, 58, 47, 48, 49, 51, 41, 11, 38, 39, 33, 1, 6]
     # distance to the previous port
-    below_dist = [ 2,  6,  6,  6,  6, 16,  6,  6,  6,  6, 16,  6,  6,  6,  6, 16,  6,  6,  6,  6, 16,  6,  6,  6,  6]
+    below_dist = [ 2,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8]
     above_dist = np.cumsum(above_dist)
     below_dist = np.cumsum(below_dist)
 
     channels = [[0 for i in range(channel_num*4)] for j in range(60)]
 
-    def find_next_0(l, st):
-        x = next((i+layer*channel_num for i in range(st, st+channel_num) for layer in range(int((channel_num*4-st)/12)) if l[i+layer*channel_num] == 0), None)
-        if x != None:
-            return x
-        else:
-            print(channels.index(l))
-            return st
-    
     def find_pair(i, o, flag):
         iti = (j+layer*channel_num for j in range(channel_num) for layer in range(4) if i[j+layer*channel_num] == 0)
         if flag:
@@ -196,6 +188,8 @@ def create_sim_space_826(file_name: str = "./fiberBoard826.xls", save_folder: st
     # data["Port2"] = pd.to_numeric(data["Port2"].str.split(':', expand=True)[0].str[1:])
     data["Port1"] = pd.to_numeric(data["Port1"])
     data["Port2"] = pd.to_numeric(data["Port2"])
+    idx = (data["Port1"] > data["Port2"])
+    data.loc[idx, ["Port1", "Port2"]] = data.loc[idx, ["Port2", "Port1"]].values
 
     data["index1"] = data.apply(lambda x: above_list.index(x.Port1) if x.Port1 in above_list else below_list.index(x.Port1) + len(above_list), axis=1)
     data["index2"] = data.apply(lambda x: above_list.index(x.Port2) if x.Port2 in above_list else below_list.index(x.Port2) + len(above_list), axis=1)

@@ -21,7 +21,6 @@ Bend_Radius = 5.0
 Delta_Arc = 0.001
 
 def main() -> None:
-    '''
     print("******* Start! ********")
     print("******* Routing the waveguides without bend... ********")
     df = create_sim_space_826(File_Name, Save_Folder, Line_Width, Dist)
@@ -30,13 +29,13 @@ def main() -> None:
     # svg2dwgscr_rect(df_rect, "fiberBoard896rect.scr", Save_Folder)
     print("******* Adding bend to the routed plain... ********")
     df_bend = plotter_bend(df_rect, Line_Width, Dist + Line_Width, Bend_Radius, Delta_Arc, Save_Folder)
-    print("******* Converting the data to gds file... ********")
-    svg2gds_bend(df_bend, Line_Width, Bend_Radius, "fiberBoard896bend.gds", Save_Folder)
+    # print("******* Converting the data to gds file... ********")
+    # svg2gds_bend(df_bend, Line_Width, Bend_Radius, "fiberBoard896bend.gds", Save_Folder)
     print("******* Calculating various index for each waveguide... ********")
-    '''
+    loss = pd.read_excel('crossloss.xlsx')
     df_bend = pd.read_excel(Save_Folder + "fiberBoard826bend.xlsx")
     del df_bend["Unnamed: 0"]
-    df_calc = calc_index(df_bend, Line_Width, Bend_Radius, 100*200)
+    df_calc = calc_index(df_bend, loss, Line_Width, Bend_Radius, 100*200)
     print("******* All done! ********")
 
 
