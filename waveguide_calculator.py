@@ -3,8 +3,8 @@ import numpy as np
 from numpy.linalg import norm
 import ast
 
-# min_angle = 90
-def calc_index(data: pd.DataFrame, line_width: float, bend_radius: float, plain_square: float) -> pd.DataFrame:
+min_angle = 90
+def calc_index(data: pd.DataFrame, loss: pd.DataFrame, line_width: float, bend_radius: float, plain_square: float) -> pd.DataFrame:
     # calculate different index for the routed waveguide board
 
     def calc_length(x):
@@ -104,21 +104,36 @@ def calc_index(data: pd.DataFrame, line_width: float, bend_radius: float, plain_
 
         if 0 in points:
             print(points)
-        # global min_angle
-        # min_angle = min(min(points), min_angle)
+        global min_angle
+        min_angle = min(min(points+[min_angle]), min_angle)
         return points
+    
+    def calc_loss(x):
+        total_loss = -1.35  # db
+        length = 9.23  # mm
+        bend_loss = total_loss/(length/bend_radius) #db/rad
+        l = 0
+        for a in x.angles:
+            l += loss.loc[loss["angle"] == int(a)]["loss_db"].values[0] / 30
+        for t in x.theta:
+            l += (t[1] - t[0]) * bend_loss
+        return l
     
     data["inflection_x"] = data.apply(lambda x: ast.literal_eval(x.inflection_x), axis=1)
     data["inflection_y"] = data.apply(lambda x: ast.literal_eval(x.inflection_y), axis=1)
     data["center"] = data.apply(lambda x: ast.literal_eval(x.center), axis=1)
+    data["theta"] = data.apply(lambda x: ast.literal_eval(x.theta), axis=1)
+
     data = data.sort_values(by="inflection", ascending=True)
     data["length"] = data.apply(lambda x: np.round(calc_length(x), 4), axis=1)
-    bg_density = np.round(np.sum(data["length"]) * line_width / plain_square, 4)
-    print(bg_density)
-    data["angles"] = data.apply(lambda x: calc_crossing(x), axis = 1)
-    data["crossing"] = data.apply(lambda x: len(x.angles), axis = 1)
+    wg_density = np.round(np.sum(data["length"]) * line_width / plain_square, 4)
+    print("waveguide_density: ", wg_density)
+    data["angles"] = data.apply(lambda x: calc_crossing(x), axis=1)
+    data["crossing"] = data.apply(lambda x: len(x.angles), axis=1)
+    # calc_loss(30)
+    data["loss"] = data.apply(lambda x: calc_loss(x), axis=1)
     print("******** Output the data to excel file ********")
     data.to_excel("fiberBoard256calc.xlsx")
-    # print(min_angle)
+    print("min angle: ", min_angle)
     
     return data

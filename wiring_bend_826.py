@@ -153,7 +153,6 @@ def plotter_bend(df_rect: pd.DataFrame, line_width: float, dist: float, bend_rad
 
             x_list = [tempx[0]] + bendx + [tempx[-1]]
             y_list = [tempy[0]] + bendy + [tempy[-1]]
-            # theta_list = [theta_map[dir_map.index(dir_list[j])] for j in range(len(dir_list))]
             theta_list = [calc_theta(dx, d) if dx<10 and dx!=0 else theta_map[dir_map.index(d)] for d in dir_list]
             j = 0
             for k in range(int(len(x_list) / 2)):
@@ -167,6 +166,7 @@ def plotter_bend(df_rect: pd.DataFrame, line_width: float, dist: float, bend_rad
                 ax.plot(arc_x_list, arc_y_list, color=color[layer], linewidth=line_width, alpha=0.8)
     plt.axis('scaled')
 
+    df["theta"] = df.apply(lambda x: [calc_theta(x.dx, d) if x.dx<10 and x.dx!=0 else theta_map[dir_map.index(d)] for d in x.dir], axis=1)
     print("******** Output Routed waveguides to svg file and pdf file ********")
     fig.savefig(save_folder+'fiberBoard826bend.svg', dpi=3000, format='svg')
     fig.savefig(save_folder+'fiberBoard826bend.pdf', dpi=3000, format='pdf')
