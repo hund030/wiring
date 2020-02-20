@@ -72,7 +72,7 @@ def create_sim_space(file_name: str = "./fiberBoard896.xls", save_folder: str = 
     return df
 
 
-def create_sim_space_826(file_name: str = "./fiberBoard826.xls", save_folder: str = './results/', line_width: float = 0.05, line_dist: float = 0.25, channel_num: int = 12) -> pd.DataFrame:
+def create_sim_space_826(file_name: str = "./fiberBoard826.xls", save_folder: str = './results/', line_width: float = 0.05, line_dist: float = 0.25, channel_num: int = 12, height: int = 150) -> pd.DataFrame:
     data = pd.read_excel(file_name)
 
     BeginPointX = 0
@@ -82,11 +82,11 @@ def create_sim_space_826(file_name: str = "./fiberBoard826.xls", save_folder: st
     # serial number for each port 
     above_list = [29, 26, 21, 20, 24, 18, 19, 16, 17, 10, 2, 14, 12, 13, 8, 9]
     # distance to the previous port
-    above_dist = [ 7,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8]
+    above_dist = [7] + [9] * (len(above_list)-1)
     # serial number for each port 
     below_list = [53, 54, 56, 57, 58, 47, 48, 49, 51, 41, 11, 38, 39, 33, 1, 6]
     # distance to the previous port
-    below_dist = [ 2,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8]
+    below_dist = [2] + [9] * (len(below_list)-1)
     above_dist = np.cumsum(above_dist)
     below_dist = np.cumsum(below_dist)
 
@@ -194,9 +194,8 @@ def create_sim_space_826(file_name: str = "./fiberBoard826.xls", save_folder: st
     data["index1"] = data.apply(lambda x: above_list.index(x.Port1) if x.Port1 in above_list else below_list.index(x.Port1) + len(above_list), axis=1)
     data["index2"] = data.apply(lambda x: above_list.index(x.Port2) if x.Port2 in above_list else below_list.index(x.Port2) + len(above_list), axis=1)
 
-    # hard code 100 height here
-    data["sy"] = data.apply(lambda x: BeginPointY+100 if x.Port1 in above_list else BeginPointY, axis=1)
-    data["ly"] = data.apply(lambda x: BeginPointY+100 if x.Port2 in above_list else BeginPointY, axis=1)
+    data["sy"] = data.apply(lambda x: BeginPointY+height if x.Port1 in above_list else BeginPointY, axis=1)
+    data["ly"] = data.apply(lambda x: BeginPointY+height if x.Port2 in above_list else BeginPointY, axis=1)
     
     data["SN_LN"] = data.apply(lambda x: layout_sn_ln(x), axis=1)
     data["SN"] = data.apply(lambda x: layout_sn(x), axis=1)

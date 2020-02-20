@@ -73,12 +73,12 @@ def plotter_bend(df_rect: pd.DataFrame, line_width: float, dist: float, bend_rad
         center_list = []
         for i in range(len(x.dir)):
             if x.dx >= 10:
-                center_list.append(tuple(np.round(
-                    np.array([x.inflection_x[i + 1], x.inflection_y[i + 1]]) + bend_radius*np.array(x.dir[i]),1)))
+                center_list.append(tuple(
+                    np.array([x.inflection_x[i + 1], x.inflection_y[i + 1]]) + bend_radius*np.array(x.dir[i])))
             else:
                 # TODO:only match to this situation
-                center_list.append(tuple(np.round(
-                    np.array([x.bend_x[i*(len(x.bend_x)-1)] + bend_radius*x.dir[i][0], x.bend_y[i*(len(x.bend_y)-1)]]),1)))
+                center_list.append(tuple(
+                    np.array([x.bend_x[i*(len(x.bend_x)-1)] + bend_radius*x.dir[i][0], x.bend_y[i*(len(x.bend_y)-1)]])))
 
         return center_list
 
@@ -168,10 +168,10 @@ def plotter_bend(df_rect: pd.DataFrame, line_width: float, dist: float, bend_rad
 
     df["theta"] = df.apply(lambda x: [calc_theta(x.dx, d) if x.dx<10 and x.dx!=0 else theta_map[dir_map.index(d)] for d in x.dir], axis=1)
     print("******** Output Routed waveguides to svg file and pdf file ********")
-    fig.savefig(save_folder+'fiberBoard826bend.svg', dpi=3000, format='svg')
-    fig.savefig(save_folder+'fiberBoard826bend.pdf', dpi=3000, format='pdf')
+    fig.savefig(save_folder+'fiberBoard256bend.svg', dpi=3000, format='svg')
+    fig.savefig(save_folder+'fiberBoard256bend.pdf', dpi=3000, format='pdf')
 
-    df.to_excel(save_folder + "fiberBoard826bend.xlsx")
+    df.to_excel(save_folder + "fiberBoard256bend.xlsx")
 
     return df
 

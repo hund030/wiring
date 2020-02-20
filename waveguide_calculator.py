@@ -4,7 +4,7 @@ from numpy.linalg import norm
 import ast
 
 min_angle = 90
-def calc_index(data: pd.DataFrame, loss: pd.DataFrame, line_width: float, bend_radius: float, plain_square: float) -> pd.DataFrame:
+def calc_index(data: pd.DataFrame, loss: pd.DataFrame, line_width: float, bend_radius: float, height: int = 150, width:int = 150) -> pd.DataFrame:
     # calculate different index for the routed waveguide board
 
     def calc_length(x):
@@ -37,8 +37,8 @@ def calc_index(data: pd.DataFrame, loss: pd.DataFrame, line_width: float, bend_r
             return False, None
         d = (det(*line1), det(*line2))
         # 
-        x = np.round(det(d, xdiff) / div, 1)
-        y = np.round(det(d, ydiff) / div, 1)
+        x = np.round(det(d, xdiff) / div, 3)
+        y = np.round(det(d, ydiff) / div, 3)
         return is_fall_on((x,y), line1) and is_fall_on((x,y), line2), (x,y)
 
     def calc_crossing(row):
@@ -60,7 +60,7 @@ def calc_index(data: pd.DataFrame, loss: pd.DataFrame, line_width: float, bend_r
             if d < bend_radius:
                 return np.round(np.arccos(d/bend_radius)/np.pi*180)
             else:
-                return 0
+                return idx
         
         def arc_to_arc(center1, center2, idx):
             p1 = np.asarray(center1)
@@ -69,7 +69,7 @@ def calc_index(data: pd.DataFrame, loss: pd.DataFrame, line_width: float, bend_r
             if d < 2 * bend_radius:
                 return np.round(np.arccos(1-d**2/(2*bend_radius**2))/np.pi*180)
             else:
-                return 0
+                return idx
 
         def f(lines, center1, x, y, center2):
             for i in range(len(x) - 1):
@@ -82,14 +82,14 @@ def calc_index(data: pd.DataFrame, loss: pd.DataFrame, line_width: float, bend_r
                         return {
                             -1: line_to_arc(center1[0], line2, -1),
                             -2: line_to_arc(center1[1], line2, -2),
-                            -3: line_to_arc(center2[0], line1, -3) if line2[0][1] == 0 or line2[0][1] == 100 else line_to_arc(center2[1], line1, 3),
-                            -4: arc_to_arc(center1[0], center2[0], -4) if line2[0][1] == 0 or line2[0][1] == 100 else arc_to_arc(center1[0], center2[1], -4),
-                            -5: arc_to_arc(center1[1], center2[0], -5) if line2[0][1] == 0 or line2[0][1] == 100 else arc_to_arc(center1[1], center2[1], -5),
+                            -3: line_to_arc(center2[0], line1, -3) if line2[0][1] == 0 or line2[0][1] == height else line_to_arc(center2[1], line1, 3),
+                            -4: arc_to_arc(center1[0], center2[0], -4) if line2[0][1] == 0 or line2[0][1] == height else arc_to_arc(center1[0], center2[1], -4),
+                            -5: arc_to_arc(center1[1], center2[0], -5) if line2[0][1] == 0 or line2[0][1] == height else arc_to_arc(center1[1], center2[1], -5),
                             1: line_to_arc(center2[0], line1, 1),
                             2: line_to_arc(center2[1], line1, 2),
-                            3: line_to_arc(center1[0], line2, 3) if line1[0][1] == 0 or line1[0][1] == 100 else line_to_arc(center1[1], line2, -3),
-                            4: arc_to_arc(center2[0], center1[0], 4) if line1[0][1] == 0 or line1[0][1] == 100 else arc_to_arc(center2[0], center1[1], 4),
-                            5: arc_to_arc(center2[1], center1[0], 5) if line1[0][1] == 0 or line1[0][1] == 100 else arc_to_arc(center2[1], center1[1], 5),
+                            3: line_to_arc(center1[0], line2, 3) if line1[0][1] == 0 or line1[0][1] == height else line_to_arc(center1[1], line2, -3),
+                            4: arc_to_arc(center2[0], center1[0], 4) if line1[0][1] == 0 or line1[0][1] == height else arc_to_arc(center2[0], center1[1], 4),
+                            5: arc_to_arc(center2[1], center1[0], 5) if line1[0][1] == 0 or line1[0][1] == height else arc_to_arc(center2[1], center1[1], 5),
                             0: 90,
                         }[is_across_at_bend(p, line1, line2)]
             return None
@@ -111,12 +111,14 @@ def calc_index(data: pd.DataFrame, loss: pd.DataFrame, line_width: float, bend_r
     def calc_loss(x):
         total_loss = -1.35  # db
         length = 9.23  # mm
-        bend_loss = total_loss/(length/bend_radius) #db/rad
+        bend_loss = total_loss / length  #db/mm
+        straight_loss = -0.005  #db/mm
         l = 0
         for a in x.angles:
             l += loss.loc[loss["angle"] == int(a)]["loss_db"].values[0] / 30
         for t in x.theta:
-            l += (t[1] - t[0]) * bend_loss
+            l += (t[1] - t[0]) * bend_radius * (bend_loss - straight_loss)
+        l += x.length * straight_loss
         return l
     
     data["inflection_x"] = data.apply(lambda x: ast.literal_eval(x.inflection_x), axis=1)
@@ -126,7 +128,7 @@ def calc_index(data: pd.DataFrame, loss: pd.DataFrame, line_width: float, bend_r
 
     data = data.sort_values(by="inflection", ascending=True)
     data["length"] = data.apply(lambda x: np.round(calc_length(x), 4), axis=1)
-    wg_density = np.round(np.sum(data["length"]) * line_width / plain_square, 4)
+    wg_density = np.round(np.sum(data["length"]) * line_width / (height*width), 4)
     print("waveguide_density: ", wg_density)
     data["angles"] = data.apply(lambda x: calc_crossing(x), axis=1)
     data["crossing"] = data.apply(lambda x: len(x.angles), axis=1)
