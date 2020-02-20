@@ -3,7 +3,13 @@ import numpy as np
 import gdspy
 import matplotlib.pyplot as plt
 
-def plotter_bend(df_rect: pd.DataFrame, line_width: float, dist: float, bend_radius: float = 5.0, delta_arc: float = 0.001, save_folder: str = './results/') -> pd.DataFrame:
+def plotter_bend(df_rect: pd.DataFrame,
+                 line_width: float,
+                 dist: float,
+                 bend_radius: float = 5.0,
+                 delta_arc: float = 0.001,
+                 save_folder: str = './results/',
+                 file_name: str = "fiberBoard256bend") -> pd.DataFrame:
     def dir_norm(a: list) -> list:
         for i in range(len(a)):
             if a[i] > 0:
@@ -168,10 +174,10 @@ def plotter_bend(df_rect: pd.DataFrame, line_width: float, dist: float, bend_rad
 
     df["theta"] = df.apply(lambda x: [calc_theta(x.dx, d) if x.dx<10 and x.dx!=0 else theta_map[dir_map.index(d)] for d in x.dir], axis=1)
     print("******** Output Routed waveguides to svg file and pdf file ********")
-    fig.savefig(save_folder+'fiberBoard256bend.svg', dpi=3000, format='svg')
-    fig.savefig(save_folder+'fiberBoard256bend.pdf', dpi=3000, format='pdf')
+    fig.savefig(save_folder+file_name+'svg', dpi=3000, format='svg')
+    fig.savefig(save_folder+file_name+'.pdf', dpi=3000, format='pdf')
 
-    df.to_excel(save_folder + "fiberBoard256bend.xlsx")
+    df.to_excel(save_folder + file_name + ".xlsx")
 
     return df
 

@@ -4,7 +4,13 @@ from numpy.linalg import norm
 import ast
 
 min_angle = 90
-def calc_index(data: pd.DataFrame, loss: pd.DataFrame, line_width: float, bend_radius: float, height: int = 150, width:int = 150) -> pd.DataFrame:
+def calc_index(data: pd.DataFrame,
+               loss: pd.DataFrame,
+               line_width: float,
+               bend_radius: float,
+               height: int = 150,
+               width: int = 150,
+               file_name: str = "fiberBoard256calc.xlsx") -> pd.DataFrame:
     # calculate different index for the routed waveguide board
 
     def calc_length(x):
@@ -60,7 +66,7 @@ def calc_index(data: pd.DataFrame, loss: pd.DataFrame, line_width: float, bend_r
             if d < bend_radius:
                 return np.round(np.arccos(d/bend_radius)/np.pi*180)
             else:
-                return idx
+                return 0
         
         def arc_to_arc(center1, center2, idx):
             p1 = np.asarray(center1)
@@ -69,7 +75,7 @@ def calc_index(data: pd.DataFrame, loss: pd.DataFrame, line_width: float, bend_r
             if d < 2 * bend_radius:
                 return np.round(np.arccos(1-d**2/(2*bend_radius**2))/np.pi*180)
             else:
-                return idx
+                return 0
 
         def f(lines, center1, x, y, center2):
             for i in range(len(x) - 1):
@@ -85,11 +91,17 @@ def calc_index(data: pd.DataFrame, loss: pd.DataFrame, line_width: float, bend_r
                             -3: line_to_arc(center2[0], line1, -3) if line2[0][1] == 0 or line2[0][1] == height else line_to_arc(center2[1], line1, 3),
                             -4: arc_to_arc(center1[0], center2[0], -4) if line2[0][1] == 0 or line2[0][1] == height else arc_to_arc(center1[0], center2[1], -4),
                             -5: arc_to_arc(center1[1], center2[0], -5) if line2[0][1] == 0 or line2[0][1] == height else arc_to_arc(center1[1], center2[1], -5),
+                            -6: arc_to_arc(center1[0], center2[0], -6) if line2[0][1] == 0 or line2[0][1] == height else arc_to_arc(center1[0], center2[1], -6) \
+                                if np.abs(p[0] - line1[0][0]) < np.abs(p[0] - line1[1][0]) else \
+                                    arc_to_arc(center1[1], center2[0], -6) if line2[0][1] == 0 or line2[0][1] == height else arc_to_arc(center1[1], center2[1], -6),
                             1: line_to_arc(center2[0], line1, 1),
                             2: line_to_arc(center2[1], line1, 2),
                             3: line_to_arc(center1[0], line2, 3) if line1[0][1] == 0 or line1[0][1] == height else line_to_arc(center1[1], line2, -3),
                             4: arc_to_arc(center2[0], center1[0], 4) if line1[0][1] == 0 or line1[0][1] == height else arc_to_arc(center2[0], center1[1], 4),
                             5: arc_to_arc(center2[1], center1[0], 5) if line1[0][1] == 0 or line1[0][1] == height else arc_to_arc(center2[1], center1[1], 5),
+                            6: arc_to_arc(center2[0], center1[0], 6) if line1[0][1] == 0 or line1[0][1] == height else arc_to_arc(center2[0], center1[1], 6) \
+                                if np.abs(p[0] - line2[0][0]) < np.abs(p[0] - line2[1][0]) else \
+                                    arc_to_arc(center2[1], center1[0], 6) if line1[0][1] == 0 or line1[0][1] == height else arc_to_arc(center2[1], center1[1], 6),
                             0: 90,
                         }[is_across_at_bend(p, line1, line2)]
             return None
@@ -103,7 +115,7 @@ def calc_index(data: pd.DataFrame, loss: pd.DataFrame, line_width: float, bend_r
         points = [p for p in points if p != None]
 
         if 0 in points:
-            print(points)
+            print(row, points)
         global min_angle
         min_angle = min(min(points+[min_angle]), min_angle)
         return points
@@ -135,7 +147,7 @@ def calc_index(data: pd.DataFrame, loss: pd.DataFrame, line_width: float, bend_r
     # calc_loss(30)
     data["loss"] = data.apply(lambda x: calc_loss(x), axis=1)
     print("******** Output the data to excel file ********")
-    data.to_excel("fiberBoard256calc.xlsx")
+    data.to_excel(file_name)
     print("min angle: ", min_angle)
     
     return data

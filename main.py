@@ -6,7 +6,7 @@ from waveguide_calculator import calc_index
 # Demands
 # File_Name = "./fiberBoard896.xls"
 # File_Name = "./fiberBoard826.xls"
-File_Name = "./fiberBoard256.xlsx"
+File_Name = "./fiberBoard512.xlsx"
 # the width of the fibers, unit: mm
 # Line_Width = 0.125
 Line_Width = 0.05
@@ -30,14 +30,14 @@ def main() -> None:
     df_rect = plotter_rect(df, Line_Width, Dist+Line_Width, Save_Folder, height)
     # svg2dwgscr_rect(df_rect, "fiberBoard896rect.scr", Save_Folder)
     print("******* Adding bend to the routed plain... ********")
-    df_bend = plotter_bend(df_rect, Line_Width, Dist + Line_Width, Bend_Radius, Delta_Arc, Save_Folder)
-    print("******* Converting the data to gds file... ********")
-    svg2gds_bend(df_bend, Line_Width, Bend_Radius, "fiberBoard256bend.gds", Save_Folder)
+    df_bend = plotter_bend(df_rect, Line_Width, Dist + Line_Width, Bend_Radius, Delta_Arc, Save_Folder, "fiberBoard512bend")
+    # print("******* Converting the data to gds file... ********")
+    # svg2gds_bend(df_bend, Line_Width, Bend_Radius, "fiberBoard256bend.gds", Save_Folder)
     print("******* Calculating various index for each waveguide... ********")
     loss = pd.read_excel('crossloss.xlsx')
-    df_bend = pd.read_excel(Save_Folder + "fiberBoard256bend.xlsx")
+    df_bend = pd.read_excel(Save_Folder + "fiberBoard512bend.xlsx")
     del df_bend["Unnamed: 0"]
-    df_calc = calc_index(df_bend, loss, Line_Width, Bend_Radius, height, width)
+    df_calc = calc_index(df_bend, loss, Line_Width, Bend_Radius, height, width, "fiberBoard512calc.xlsx")
     print("******* All done! ********")
 
 

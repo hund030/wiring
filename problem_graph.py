@@ -80,50 +80,17 @@ def create_sim_space_826(file_name: str = "./fiberBoard826.xls", save_folder: st
     BeginPointZ = 0
 
     # serial number for each port 
+    '''
     above_list = [29, 26, 21, 20, 24, 18, 19, 16, 17, 10, 2, 14, 12, 13, 8, 9]
-    # distance to the previous port
-    above_dist = [7] + [9] * (len(above_list)-1)
-    # serial number for each port 
     below_list = [53, 54, 56, 57, 58, 47, 48, 49, 51, 41, 11, 38, 39, 33, 1, 6]
+    '''
+    above_list = [21, 116, 29, 114, 26, 113, 24, 117, 20, 118, 18, 107, 19, 108, 16, 109, 17, 101, 10, 111, 2, 12, 13, 98, 71, 99, 14, 93, 8, 61, 9, 66]
+    below_list = [53, 89, 54, 80, 56, 81, 57, 86, 58, 84, 47, 79, 48, 78, 49, 76, 51, 77, 41, 70, 11, 62, 38, 74, 39, 72, 1, 73, 33, 68, 6, 69]
     # distance to the previous port
-    below_dist = [2] + [9] * (len(below_list)-1)
+    above_dist = [4.5] + [4.5] * (len(above_list)-1)
+    below_dist = [2] + [4.5] * (len(below_list)-1)
     above_dist = np.cumsum(above_dist)
     below_dist = np.cumsum(below_dist)
-
-    channels = [[0 for i in range(channel_num*4)] for j in range(60)]
-
-    def find_pair(i, o, flag):
-        iti = (j+layer*channel_num for j in range(channel_num) for layer in range(4) if i[j+layer*channel_num] == 0)
-        if flag:
-            ito = (j+layer*channel_num for j in reversed(range(channel_num)) for layer in range(4) if o[j+layer*channel_num] == 0)
-        else:
-            ito = (j+layer*channel_num for j in range(channel_num) for layer in range(4) if o[j+layer*channel_num] == 0)
-        iti_copy, iti = tee(iti)
-
-        xi = next(iti, None)
-        xo = next(ito, None)
-        while int(xi / channel_num) != int(xo / channel_num):
-            xi = next(iti, None)
-            if xi == None:
-                iti_copy, iti = tee(iti_copy)
-                xi = next(iti, None)
-                xo = next(ito, None)
-                if xo == None:
-                    print(channels.index(i), channels.index(o))
-                    return xi, 0
-        return xi, xo
-
-    def layout_sn_ln(x):
-        p1, p2 = find_pair(channels[x.Port1], channels[x.Port2], x.sy == x.ly)
-        channels[x.Port1][p1] = 1
-        channels[x.Port2][p2] = 1
-        return (p1, p2)
-
-    def layout_sn(x):
-        return x.SN_LN[0]
-
-    def layout_ln(x):
-        return x.SN_LN[1]
 
     def find_next(value: int, l: list, reverse: bool) -> int:
         length = len(l)
@@ -136,21 +103,21 @@ def create_sim_space_826(file_name: str = "./fiberBoard826.xls", save_folder: st
         return -1
 
     def sn_posx(x):
-        idx = find_next(x.index2, PORTS[x.index1], False)
-        PORTS[x.index1][idx] = -1
+        idx = find_next(x.index2, PORTS[int(x.index1)], False)
+        PORTS[int(x.index1)][idx] = -1
         base_x = above_dist[above_list.index(x.Port1)] if x.Port1 in above_list else below_dist[below_list.index(x.Port1)]
         return base_x + idx * (line_dist + line_width)
 
     def ln_posx(x):
-        idx = find_next(x.index1, PORTS[x.index2], x.sy==x.ly)
-        PORTS[x.index2][idx] = -1
+        idx = find_next(x.index1, PORTS[int(x.index2)], x.sy==x.ly)
+        PORTS[int(x.index2)][idx] = -1
         base_x = above_dist[above_list.index(x.Port2)] if x.Port2 in above_list else below_dist[below_list.index(x.Port2)]
         return base_x + idx * (line_dist + line_width)
 
     PORTS = [[] for j in range(len(below_list)+len(above_list))]
     def calc_sn_ln(x):
-        PORTS[x.index1].append(x.index2)
-        PORTS[x.index2].append(x.index1)
+        PORTS[int(x.index1)].append(x.index2)
+        PORTS[int(x.index2)].append(x.index1)
         return None
 
     def coarse_sort(PORTS):
@@ -180,7 +147,7 @@ def create_sim_space_826(file_name: str = "./fiberBoard826.xls", save_folder: st
                     else:
                         # TODO:: throw exception
                         print("Port error")
-            PORTS[i] = np.sort(left).tolist() + np.sort(center).tolist() + np.sort(right)[::-1].tolist()
+            PORTS[i] = np.sort(left)[::-1].tolist() + np.sort(center).tolist() + np.sort(right)[::-1].tolist()
         return PORTS
 
     
@@ -193,14 +160,8 @@ def create_sim_space_826(file_name: str = "./fiberBoard826.xls", save_folder: st
 
     data["index1"] = data.apply(lambda x: above_list.index(x.Port1) if x.Port1 in above_list else below_list.index(x.Port1) + len(above_list), axis=1)
     data["index2"] = data.apply(lambda x: above_list.index(x.Port2) if x.Port2 in above_list else below_list.index(x.Port2) + len(above_list), axis=1)
-
     data["sy"] = data.apply(lambda x: BeginPointY+height if x.Port1 in above_list else BeginPointY, axis=1)
     data["ly"] = data.apply(lambda x: BeginPointY+height if x.Port2 in above_list else BeginPointY, axis=1)
-    
-    data["SN_LN"] = data.apply(lambda x: layout_sn_ln(x), axis=1)
-    data["SN"] = data.apply(lambda x: layout_sn(x), axis=1)
-    data["LN"] = data.apply(lambda x: layout_ln(x), axis=1)
-    # data["dz"] = data.apply(lambda x: int(x.SN / channel_num), axis=1)
     data["dz"] = data.apply(lambda x: 0, axis=1)
 
     data.apply(lambda x: calc_sn_ln(x), axis=1)
@@ -211,7 +172,7 @@ def create_sim_space_826(file_name: str = "./fiberBoard826.xls", save_folder: st
     data["dx"] = data.apply(lambda x: np.abs(x.sx - x.lx), axis=1)
     # switch port1 and port2 if port2 is at the right of port1.
     idx = (data["sx"] < data["lx"])
-    data.loc[idx, ["Port1", "Port2","index1", "index2", "SN", "LN", "sy", "ly", "sx", "lx"]] = data.loc[idx, ["Port2", "Port1", "index2", "index1", "LN", "SN", "ly", "sy", "lx", "sx"]].values
+    data.loc[idx, ["Port1", "Port2","index1", "index2", "sy", "ly", "sx", "lx"]] = data.loc[idx, ["Port2", "Port1", "index2", "index1", "ly", "sy", "lx", "sx"]].values
     
     data = data.sort_values(by="sx", ascending=True)
 
