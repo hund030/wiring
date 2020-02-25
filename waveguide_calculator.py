@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 from numpy.linalg import norm
 import ast
+import os
 
 min_angle = 90
 def calc_index(data: pd.DataFrame,
@@ -52,11 +53,11 @@ def calc_index(data: pd.DataFrame,
             # line1 vertical which means line2 horizontal
             if np.abs(line1[0][0] - line1[1][0]) < 0.1:
                 return int(np.abs(p[0] - line2[0][0]) < bend_radius) + int(np.abs(p[0] - line2[1][0]) < bend_radius) * 2 + \
-                    int(np.abs(p[1] - line1[0][1]) < bend_radius or np.abs(p[1] - line1[1][1]) < bend_radius) * 3
+                    int(np.abs(p[1] - line1[0][1]) < bend_radius or np.abs(p[1] - line1[1][1]) < bend_radius) * 4
             # else line1 horizontal which means line2 vertical
             else:
                 return -int(np.abs(p[0] - line1[0][0]) < bend_radius) - int(np.abs(p[0] - line1[1][0]) < bend_radius) * 2 - \
-                    int(np.abs(p[1] - line2[0][1]) < bend_radius or np.abs(p[1] - line2[1][1]) < bend_radius) * 3
+                    int(np.abs(p[1] - line2[0][1]) < bend_radius or np.abs(p[1] - line2[1][1]) < bend_radius) * 4
         
         def line_to_arc(center, line, idx):
             p0 = np.asarray(center)
@@ -66,16 +67,23 @@ def calc_index(data: pd.DataFrame,
             if d < bend_radius:
                 return np.round(np.arccos(d/bend_radius)/np.pi*180)
             else:
-                return 0
+                return idx if os.getenv('DEBUG') == 'True' else 0
         
-        def arc_to_arc(center1, center2, idx):
+        def arc_to_arc(center1, center2, line1, line2, idx):
             p1 = np.asarray(center1)
             p2 = np.asarray(center2)
             d = norm(p1 - p2)
             if d < 2 * bend_radius:
                 return np.round(np.arccos(1-d**2/(2*bend_radius**2))/np.pi*180)
             else:
-                return 0
+                if center1[0] >= min(line2[0][0], line2[1][0]) and center1[0] <= max(line2[0][0], line2[1][0]) or \
+                    center1[1] >= min(line2[0][1], line2[1][1]) and center1[1] <= max(line2[0][1], line2[1][1]):
+                    return line_to_arc(center1, line2, idx)
+                elif center2[0] >= min(line1[0][0], line1[1][0]) and center2[0] <= max(line1[0][0], line1[1][0]) or \
+                    center2[1] >= min(line1[0][1], line1[1][1]) and center2[1] <= max(line1[0][1], line1[1][1]):
+                    return line_to_arc(center2, line1, idx)
+                else:
+                    return idx if os.getenv('DEBUG') == 'True' else 0
 
         def f(lines, center1, x, y, center2):
             for i in range(len(x) - 1):
@@ -85,26 +93,39 @@ def calc_index(data: pd.DataFrame,
                         return None
                     ok, p = is_cross(line1, line2)
                     if ok:
-                        return {
+                        result = {
                             -1: line_to_arc(center1[0], line2, -1),
                             -2: line_to_arc(center1[1], line2, -2),
-                            -3: line_to_arc(center2[0], line1, -3) if line2[0][1] == 0 or line2[0][1] == height else line_to_arc(center2[1], line1, 3),
-                            -4: arc_to_arc(center1[0], center2[0], -4) if line2[0][1] == 0 or line2[0][1] == height else arc_to_arc(center1[0], center2[1], -4),
-                            -5: arc_to_arc(center1[1], center2[0], -5) if line2[0][1] == 0 or line2[0][1] == height else arc_to_arc(center1[1], center2[1], -5),
-                            -6: arc_to_arc(center1[0], center2[0], -6) if line2[0][1] == 0 or line2[0][1] == height else arc_to_arc(center1[0], center2[1], -6) \
+                            -3: line_to_arc(center1[0], line2, -3) \
                                 if np.abs(p[0] - line1[0][0]) < np.abs(p[0] - line1[1][0]) else \
-                                    arc_to_arc(center1[1], center2[0], -6) if line2[0][1] == 0 or line2[0][1] == height else arc_to_arc(center1[1], center2[1], -6),
+                                    line_to_arc(center1[1], line2, -3),
+                            -4: line_to_arc(center2[0], line1, -4) if line2[0][1] == 0 or line2[0][1] == height else line_to_arc(center2[1], line1, 4),
+                            -5: arc_to_arc(center1[0], center2[0], line1, line2, -5) if line2[0][1] == 0 or line2[0][1] == height else arc_to_arc(center1[0], center2[1], line1, line2, -5),
+                            -6: arc_to_arc(center1[1], center2[0], line1, line2, -6) if line2[0][1] == 0 or line2[0][1] == height else arc_to_arc(center1[1], center2[1], line1, line2, -6),
+                            -7: arc_to_arc(center1[0], center2[0], line1, line2, -7) if line2[0][1] == 0 or line2[0][1] == height else arc_to_arc(center1[0], center2[1], line1, line2, -7) \
+                                if np.abs(p[0] - line1[0][0]) < np.abs(p[0] - line1[1][0]) else \
+                                    arc_to_arc(center1[1], center2[0], line1, line2, -7) if line2[0][1] == 0 or line2[0][1] == height else arc_to_arc(center1[1], center2[1], line1, line2, -7),
                             1: line_to_arc(center2[0], line1, 1),
                             2: line_to_arc(center2[1], line1, 2),
-                            3: line_to_arc(center1[0], line2, 3) if line1[0][1] == 0 or line1[0][1] == height else line_to_arc(center1[1], line2, -3),
-                            4: arc_to_arc(center2[0], center1[0], 4) if line1[0][1] == 0 or line1[0][1] == height else arc_to_arc(center2[0], center1[1], 4),
-                            5: arc_to_arc(center2[1], center1[0], 5) if line1[0][1] == 0 or line1[0][1] == height else arc_to_arc(center2[1], center1[1], 5),
-                            6: arc_to_arc(center2[0], center1[0], 6) if line1[0][1] == 0 or line1[0][1] == height else arc_to_arc(center2[0], center1[1], 6) \
+                            3: line_to_arc(center2[0], line2, 3) \
                                 if np.abs(p[0] - line2[0][0]) < np.abs(p[0] - line2[1][0]) else \
-                                    arc_to_arc(center2[1], center1[0], 6) if line1[0][1] == 0 or line1[0][1] == height else arc_to_arc(center2[1], center1[1], 6),
+                                    line_to_arc(center2[1], line2, 3),
+                            4: line_to_arc(center1[0], line2, 4) if line1[0][1] == 0 or line1[0][1] == height else line_to_arc(center1[1], line2, 4),
+                            5: arc_to_arc(center2[0], center1[0], line2, line1, 5) if line1[0][1] == 0 or line1[0][1] == height else arc_to_arc(center2[0], center1[1], line2, line1, 5),
+                            6: arc_to_arc(center2[1], center1[0], line2, line1, 6) if line1[0][1] == 0 or line1[0][1] == height else arc_to_arc(center2[1], center1[1], line2, line1, 6),
+                            7: arc_to_arc(center2[0], center1[0], line2, line1, 7) if line1[0][1] == 0 or line1[0][1] == height else arc_to_arc(center2[0], center1[1], line2, line1, 7) \
+                                if np.abs(p[0] - line2[0][0]) < np.abs(p[0] - line2[1][0]) else \
+                                    arc_to_arc(center2[1], center1[0], line2, line1, 7) if line1[0][1] == 0 or line1[0][1] == height else arc_to_arc(center2[1], center1[1], line2, line1, 7),
                             0: 90,
                         }[is_across_at_bend(p, line1, line2)]
+
+                        if os.getenv('DEBUG') == 'True':
+                            print(p, line1, line2, result)
+                        return result
             return None
+
+        if os.getenv('DEBUG') == 'True' and row.name != 217:
+            return []
 
         lines = []
         # the length of inflection_x and inflection_y should be the same
@@ -144,7 +165,11 @@ def calc_index(data: pd.DataFrame,
     print("waveguide_density: ", wg_density)
     data["angles"] = data.apply(lambda x: calc_crossing(x), axis=1)
     data["crossing"] = data.apply(lambda x: len(x.angles), axis=1)
-    # calc_loss(30)
+
+    # if debug, break in advance
+    if os.getenv('DEBUG') == 'True':
+        return data
+
     data["loss"] = data.apply(lambda x: calc_loss(x), axis=1)
     print("******** Output the data to excel file ********")
     data.to_excel(file_name)

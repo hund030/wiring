@@ -87,7 +87,7 @@ def create_sim_space_826(file_name: str = "./fiberBoard826.xls", save_folder: st
     above_list = [21, 116, 29, 114, 26, 113, 24, 117, 20, 118, 18, 107, 19, 108, 16, 109, 17, 101, 10, 111, 2, 12, 13, 98, 71, 99, 14, 93, 8, 61, 9, 66]
     below_list = [53, 89, 54, 80, 56, 81, 57, 86, 58, 84, 47, 79, 48, 78, 49, 76, 51, 77, 41, 70, 11, 62, 38, 74, 39, 72, 1, 73, 33, 68, 6, 69]
     # distance to the previous port
-    above_dist = [4.5] + [4.5] * (len(above_list)-1)
+    above_dist = [4.2] + [4.5] * (len(above_list)-1)
     below_dist = [2] + [4.5] * (len(below_list)-1)
     above_dist = np.cumsum(above_dist)
     below_dist = np.cumsum(below_dist)
