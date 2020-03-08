@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 from numpy.linalg import norm
+import matplotlib.pyplot as plt
 import ast
 import os
 
@@ -124,7 +125,7 @@ def calc_index(data: pd.DataFrame,
                         return result
             return None
 
-        if os.getenv('DEBUG') == 'True' and row.name != 217:
+        if os.getenv('DEBUG') == 'True' and row.name != 56:
             return []
 
         lines = []
@@ -142,8 +143,18 @@ def calc_index(data: pd.DataFrame,
         return points
     
     def calc_loss(x):
+        '''
         total_loss = -1.35  # db
         length = 9.23  # mm
+        total_loss = -0.47  # db
+        length = 10.05  # mm
+        '''
+        total_loss = -0.16  # db
+        length = 11.53  # mm
+        '''
+        total_loss = -0.14  # db
+        length = 12.92  # mm
+        '''
         bend_loss = total_loss / length  #db/mm
         straight_loss = -0.005  #db/mm
         l = 0
@@ -176,3 +187,29 @@ def calc_index(data: pd.DataFrame,
     print("min angle: ", min_angle)
     
     return data
+
+
+def draw_chart(data: pd.DataFrame, filename: str):
+    plt.clf()
+    plt.hist(data["loss"], bins=32)
+    plt.xlabel('loss/db')
+    plt.ylabel('counts')
+    plt.gca().invert_xaxis()
+    plt.savefig("loss-count"+filename+".png")
+
+    data["loss"] = data.apply(lambda x: float(x.loss), axis=1)
+    data["length"] = data.apply(lambda x: float(x.length), axis=1)
+    data = data.sort_values(by="length", ascending=True)
+    fig,ax = plt.subplots()
+    data["straight_loss"] = data.apply(lambda x: -0.005 * x.length, axis=1)
+    ax.scatter(data["length"], data["loss"], label="loss", color="red")
+    ax.scatter(data["length"], data["straight_loss"], label="straight_loss", color="blue")
+    plt.gca().invert_yaxis()
+    plt.savefig("loss-length"+filename+".png")
+
+    data["crossing"] = data.apply(lambda x: float(x.crossing), axis=1)
+    data = data.sort_values(by="crossing", ascending=True)
+    fig,ax = plt.subplots()
+    ax.scatter(data["crossing"], data["loss"], label="loss", color="red")
+    plt.gca().invert_yaxis()
+    plt.savefig("loss-crossing"+filename+".png")

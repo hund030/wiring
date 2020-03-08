@@ -1,7 +1,7 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 
-interface_length = 5.5
+interface_length = 10
 
 def plotter_rect(df: pd.DataFrame, line_width: float, dist: float, save_folder: str = './results/', height: int = 150) -> pd.DataFrame:
     def wiring_rect_below(dist: float, df: pd.DataFrame) -> pd.DataFrame:
@@ -14,9 +14,13 @@ def plotter_rect(df: pd.DataFrame, line_width: float, dist: float, save_folder: 
         df2 = df.copy()
         df2 = df2[(df2["sy"]==0) & (df2["ly"]==0)]
         # df2 = df2.sort_values(by=["index2", "sx"], ascending=[False, True])
+        list_inflection = [(i * dist + interface_length \
+            for i in range(df2[df2["dz"] == layer].shape[0])) for layer in range(4)]
+        '''
         list_inflection = [(i * dist + interface_length + \
             6*dist*(df2[df2["dz"] == 0]["index1"].tolist()[i]-41) \
             for i in range(df2[df2["dz"] == layer].shape[0])) for layer in range(4)]
+        '''
 
         df2['inflection'] = df2.apply(lambda x: next(list_inflection[int(x.dz)]), axis=1)
         df2['inflection_x'] = df2.apply(lambda x: f_inflection_x(x), axis=1)
@@ -41,9 +45,13 @@ def plotter_rect(df: pd.DataFrame, line_width: float, dist: float, save_folder: 
         df4 = df4[(df4["sy"]!=0) & (df4["ly"]!=0)]
         # df4 = df4.sort_values(by=["index2", "sx"], ascending=[False, True])
 
+        list_inflection = [(height - (i * dist + interface_length) \
+            for i in range(df4[df4["dz"] == layer].shape[0])) for layer in range(4)]
+        '''
         list_inflection = [(height - (i * dist + interface_length + \
             6*dist*(df4[df4["dz"] == 0]["index1"].tolist()[i]-6)) \
             for i in range(df4[df4["dz"]==layer].shape[0])) for layer in range(4)]
+        '''
         df4['inflection'] = df4.apply(lambda x: next(list_inflection[int(x.dz)]), axis=1)
         df4['inflection_x'] = df4.apply(lambda x: f_inflection_x(x), axis=1)
         df4['inflection_y'] = df4.apply(lambda x: f_inflection_y(x), axis=1)
@@ -71,7 +79,8 @@ def plotter_rect(df: pd.DataFrame, line_width: float, dist: float, save_folder: 
         df3 = df3[(df3["sy"] == 0) & (df3["ly"] != 0)]
         df3 = df3.sort_values(by="sx", ascending=False)
 
-        list_inflection = [(height - ((i + df4.shape[0]+25*6) * dist + interface_length) for i in range(df3.shape[0]))]
+        # list_inflection = [(height - ((i + df4.shape[0]+25*6) * dist + interface_length) for i in range(df3.shape[0]))]
+        list_inflection = [(height - ((i + df4.shape[0]) * dist + interface_length) for i in range(df3.shape[0]))]
         df3['inflection'] = df3.apply(lambda x: next(list_inflection[int(x.dz)]), axis=1)
         df3['inflection_x'] = df3.apply(lambda x: f_inflection_x(x), axis=1)
         df3['inflection_y'] = df3.apply(lambda x: f_inflection_y(x), axis=1)
@@ -98,7 +107,8 @@ def plotter_rect(df: pd.DataFrame, line_width: float, dist: float, save_folder: 
         df5 = df5[(df5["sy"] != 0) & (df5["ly"] == 0)]
         df5 = df5.sort_values(by="sx", ascending=True)
 
-        list_inflection = [(height - ((i + df3.shape[0] + df4.shape[0]+25*6) * dist + interface_length) for i in range(df5.shape[0]))]
+        # list_inflection = [(height - ((i + df3.shape[0] + df4.shape[0]+25*6) * dist + interface_length) for i in range(df5.shape[0]))]
+        list_inflection = [(height - ((i + df3.shape[0] + df4.shape[0]) * dist + interface_length) for i in range(df5.shape[0]))]
         df5['inflection'] = df5.apply(lambda x: next(list_inflection[int(x.dz)]), axis=1)
         df5['inflection_x'] = df5.apply(lambda x: f_inflection_x(x), axis=1)
         df5['inflection_y'] = df5.apply(lambda x: f_inflection_y(x), axis=1)

@@ -46,7 +46,7 @@ def plotter_bend(df_rect: pd.DataFrame,
             dir_in = dir_norm([x.inflection_x[i] - x.inflection_x[i + 1], x.inflection_y[i] - x.inflection_y[i + 1]])
             dir_out = dir_norm(
                 [x.inflection_x[i + 2] - x.inflection_x[i + 1], x.inflection_y[i + 2] - x.inflection_y[i + 1]])
-            if x.dx >= 10:
+            if x.dx >= bend_radius*2:
                 bend_x_list = bend_x_list + [x.inflection_x[i + 1] + bend_radius * dir_in[0],
                                          x.inflection_x[i + 1] + bend_radius*dir_out[0]]
             #TODO: only match to current situation
@@ -64,7 +64,7 @@ def plotter_bend(df_rect: pd.DataFrame,
             dir_in = dir_norm([x.inflection_x[i] - x.inflection_x[i + 1], x.inflection_y[i] - x.inflection_y[i + 1]])
             dir_out = dir_norm(
                 [x.inflection_x[i + 2] - x.inflection_x[i + 1], x.inflection_y[i + 2] - x.inflection_y[i + 1]])
-            if x.dx >= 10:
+            if x.dx >= bend_radius*2:
                 bend_y_list = bend_y_list + [x.inflection_y[i + 1] + bend_radius * dir_in[1],
                                          x.inflection_y[i + 1] + bend_radius * dir_out[1]]
             #TODO: only match to current situation
@@ -78,7 +78,7 @@ def plotter_bend(df_rect: pd.DataFrame,
         # 同dir_list如何初始化更有利于维护？
         center_list = []
         for i in range(len(x.dir)):
-            if x.dx >= 10:
+            if x.dx >= bend_radius*2:
                 center_list.append(tuple(
                     np.array([x.inflection_x[i + 1], x.inflection_y[i + 1]]) + bend_radius*np.array(x.dir[i])))
             else:
@@ -124,7 +124,7 @@ def plotter_bend(df_rect: pd.DataFrame,
             x_list = [tempx[0]] + bendx + [tempx[-1]]
             y_list = [tempy[0]] + bendy + [tempy[-1]]
             # theta_list = [theta_map[dir_map.index(dir_list[j])] for j in range(len(dir_list))]
-            theta_list = [calc_theta(dx, d) if dx<10 and dx!=0 else theta_map[dir_map.index(d)] for d in dir_list]
+            theta_list = [calc_theta(dx, d) if dx<bend_radius*2 and dx!=0 else theta_map[dir_map.index(d)] for d in dir_list]
             j = 0
             for k in range(int(len(x_list) / 2)):
                 ax.plot(x_list[j:j + 2], y_list[j:j + 2], color=color[layer], linewidth=line_width, alpha=0.8)
@@ -159,7 +159,7 @@ def plotter_bend(df_rect: pd.DataFrame,
 
             x_list = [tempx[0]] + bendx + [tempx[-1]]
             y_list = [tempy[0]] + bendy + [tempy[-1]]
-            theta_list = [calc_theta(dx, d) if dx<10 and dx!=0 else theta_map[dir_map.index(d)] for d in dir_list]
+            theta_list = [calc_theta(dx, d) if dx<bend_radius*2 and dx!=0 else theta_map[dir_map.index(d)] for d in dir_list]
             j = 0
             for k in range(int(len(x_list) / 2)):
                 ax.plot(x_list[j:j + 2], y_list[j:j + 2], color=color[layer], linewidth=line_width, alpha=0.8)
@@ -172,7 +172,7 @@ def plotter_bend(df_rect: pd.DataFrame,
                 ax.plot(arc_x_list, arc_y_list, color=color[layer], linewidth=line_width, alpha=0.8)
     plt.axis('scaled')
 
-    df["theta"] = df.apply(lambda x: [calc_theta(x.dx, d) if x.dx<10 and x.dx!=0 else theta_map[dir_map.index(d)] for d in x.dir], axis=1)
+    df["theta"] = df.apply(lambda x: [calc_theta(x.dx, d) if x.dx<bend_radius*2 and x.dx!=0 else theta_map[dir_map.index(d)] for d in x.dir], axis=1)
     print("******** Output Routed waveguides to svg file and pdf file ********")
     fig.savefig(save_folder+file_name+'svg', dpi=3000, format='svg')
     fig.savefig(save_folder+file_name+'.pdf', dpi=3000, format='pdf')
