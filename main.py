@@ -5,7 +5,7 @@ from wiring_bend_826 import plotter_bend, svg2gds_bend
 from waveguide_calculator import calc_index, draw_chart
 # Demands
 # waveguide count
-N = 256
+N = 512
 # File_Name = "./fiberBoard896.xls"
 # File_Name = "./fiberBoard826.xls"
 File_Name = "./fiberBoard"+str(N)+".xlsx"
@@ -14,11 +14,11 @@ File_Name = "./fiberBoard"+str(N)+".xlsx"
 Line_Width = 0.05
 # the minimal Distance between parallel lines, unit: mm
 # Dist = 0.2
-Dist = 0.25
+Dist = 0.125
 # save folder
 Save_Folder = './results/'
 # minimal bend radius, unit: mm
-Bend_Radius = 8.0
+Bend_Radius = 5
 # bend.svg accuracy, unit: mm
 Delta_Arc = 0.001
 # mm
@@ -26,7 +26,6 @@ height = 150
 width = 150
 
 def main() -> None:
-    '''
     print("******* Start! ********")
     print("******* Routing the waveguides without bend... ********")
     df = create_sim_space_826(File_Name, Save_Folder, Line_Width, Dist, height)
@@ -41,12 +40,10 @@ def main() -> None:
     df_bend = pd.read_excel(Save_Folder + "fiberBoard"+str(N)+"bend.xlsx")
     del df_bend["Unnamed: 0"]
     df_calc = calc_index(df_bend, loss, Line_Width, Bend_Radius, height, width, "fiberBoard"+str(N)+"calc.xlsx")
-    '''
     print("******* draw graph ********")
     data = pd.read_excel("fiberBoard"+str(N)+"calc.xlsx")
     draw_chart(data, str(N))
     print("******* All done! ********")
-
 
 if __name__ == "__main__":
     main()

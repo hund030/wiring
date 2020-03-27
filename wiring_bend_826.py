@@ -1,7 +1,42 @@
 import pandas as pd
 import numpy as np
 import gdspy
+import matplotlib
 import matplotlib.pyplot as plt
+matplotlib.rcParams['xtick.direction'] = 'in'
+matplotlib.rcParams['ytick.direction'] = 'in'
+matplotlib.rcParams['mathtext.fontset'] = 'custom'
+matplotlib.rcParams['mathtext.rm'] = 'Arial'
+
+class data_linewidth_plot():
+    def __init__(self, x, y, **kwargs):
+        self.ax = kwargs.pop("ax", plt.gca())
+        self.fig = self.ax.get_figure()
+        self.lw_data = kwargs.pop("linewidth", 1)
+        self.lw = 1
+        self.fig.canvas.draw()
+
+        self.ppd = 72./self.fig.dpi
+        self.trans = self.ax.transData.transform
+        self.linehandle, = self.ax.plot([],[],**kwargs)
+        if "label" in kwargs: kwargs.pop("label")
+        self.line, = self.ax.plot(x, y, **kwargs)
+        self.line.set_color(self.linehandle.get_color())
+        self._resize()
+        self.cid = self.fig.canvas.mpl_connect('draw_event', self._resize)
+
+    def _resize(self, event=None):
+        lw =  ((self.trans((1, self.lw_data))-self.trans((0, 0)))*self.ppd)[1]
+        if lw != self.lw:
+            self.line.set_linewidth(lw)
+            self.lw = lw
+            self._redraw_later()
+
+    def _redraw_later(self):
+        self.timer = self.fig.canvas.new_timer(interval=10)
+        self.timer.single_shot = True
+        self.timer.add_callback(lambda : self.fig.canvas.draw_idle())
+        self.timer.start()
 
 def plotter_bend(df_rect: pd.DataFrame,
                  line_width: float,
@@ -143,8 +178,8 @@ def plotter_bend(df_rect: pd.DataFrame,
     fig = plt.figure()
     ax = plt.gca()
 
-    ax.set_xlabel('x')
-    ax.set_ylabel('y')
+    ax.set_xlabel(r'$\mathrm{x(mm)}$', fontsize=18)
+    ax.set_ylabel(r'$\mathrm{y(mm)}$', fontsize=18)
 
     color = ['r', 'b', 'm', 'c']
     for layer in range(4):
@@ -162,19 +197,22 @@ def plotter_bend(df_rect: pd.DataFrame,
             theta_list = [calc_theta(dx, d) if dx<bend_radius*2 and dx!=0 else theta_map[dir_map.index(d)] for d in dir_list]
             j = 0
             for k in range(int(len(x_list) / 2)):
-                ax.plot(x_list[j:j + 2], y_list[j:j + 2], color=color[layer], linewidth=line_width, alpha=0.8)
+                ax.plot(x_list[j:j + 2], y_list[j:j + 2], color=color[layer], linewidth=line_width, alpha=1.0)
+                # data_linewidth_plot(x_list[j:j + 2], y_list[j:j + 2], ax=ax, color=color[layer], linewidth=line_width, alpha=1.0)
                 j = j + 2
             for k in range(int(len(center_list))):
                 arc_x_list = list(
                     center_list[k][0] + bend_radius * np.cos(np.arange(theta_list[k][0], theta_list[k][1], delta_arc)))
                 arc_y_list = list(
                     center_list[k][1] + bend_radius * np.sin(np.arange(theta_list[k][0], theta_list[k][1], delta_arc)))
-                ax.plot(arc_x_list, arc_y_list, color=color[layer], linewidth=line_width, alpha=0.8)
+                ax.plot(arc_x_list, arc_y_list, color=color[layer], linewidth=line_width, alpha=1.0)
+                # data_linewidth_plot(arc_x_list, arc_y_list, ax=ax, color=color[layer], linewidth=line_width, alpha=1.0)
     plt.axis('scaled')
 
     df["theta"] = df.apply(lambda x: [calc_theta(x.dx, d) if x.dx<bend_radius*2 and x.dx!=0 else theta_map[dir_map.index(d)] for d in x.dir], axis=1)
     print("******** Output Routed waveguides to svg file and pdf file ********")
-    fig.savefig(save_folder+file_name+'svg', dpi=3000, format='svg')
+    # fig.savefig(save_folder+file_name+'.svg', dpi=3000, format='svg')
+    fig.savefig(save_folder+file_name+'.png', dpi=3000, format='png')
     fig.savefig(save_folder+file_name+'.pdf', dpi=3000, format='pdf')
 
     df.to_excel(save_folder + file_name + ".xlsx")

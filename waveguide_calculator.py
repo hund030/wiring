@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 from numpy.linalg import norm
+from scipy.stats import norm as nm
 import matplotlib.pyplot as plt
 import ast
 import os
@@ -143,17 +144,27 @@ def calc_index(data: pd.DataFrame,
         return points
     
     def calc_loss(x):
+        r = [2, 3, 4, 5, 6, 8]
+        tl = [-16.0, -10.59, -6.08, -2.80, -2.03, -1.39]
+        ll = [6.33, 7.33, 8.33, 9.23, 10.05, 11.53]
+        total_loss = tl[r.index(bend_radius)]
+        length = ll[r.index(bend_radius)]
         '''
-        total_loss = -1.35  # db
-        length = 9.23  # mm
-        total_loss = -0.47  # db
-        length = 10.05  # mm
-        '''
-        total_loss = -0.16  # db
-        length = 11.53  # mm
-        '''
-        total_loss = -0.14  # db
-        length = 12.92  # mm
+        if bend_radius == 3:
+            total_loss = -10.59  # db
+            length = 7.33  # mm
+        elif bend_radius == 4:
+            total_loss = -6.08  # db
+            length = 8.33  # mm
+        elif bend_radius == 5:
+            total_loss = -2.80  # db
+            length = 9.23  # mm
+        elif bend_radius == 6:
+            total_loss = -2.03  # db
+            length = 10.05  # mm
+        elif bend_radius == 8:
+            total_loss = -1.39  # db
+            length = 11.53  # mm
         '''
         bend_loss = total_loss / length  #db/mm
         straight_loss = -0.005  #db/mm
@@ -191,25 +202,38 @@ def calc_index(data: pd.DataFrame,
 
 def draw_chart(data: pd.DataFrame, filename: str):
     plt.clf()
-    plt.hist(data["loss"], bins=32)
-    plt.xlabel('loss/db')
-    plt.ylabel('counts')
-    plt.gca().invert_xaxis()
-    plt.savefig("loss-count"+filename+".png")
 
     data["loss"] = data.apply(lambda x: float(x.loss), axis=1)
     data["length"] = data.apply(lambda x: float(x.length), axis=1)
+    data["crossing"] = data.apply(lambda x: float(x.crossing), axis=1)
+
+    n, bins, patches = plt.hist(data["loss"], bins=64)
+    plt.ylabel('loss(db)')
+    plt.xlabel('counts')
+    plt.gca().invert_xaxis()
+    xmin, xmax = plt.xlim()
+
+    loss_mu, loss_std = nm.fit(data["loss"])
+    y = nm.pdf(bins, loss_mu, loss_std) * (xmin - xmax) / 64 * int(filename)
+    plt.plot(bins, y, 'r--', linewidth=2)
+    plt.savefig("loss-count"+filename+".png")
+
+    # loss to length
     data = data.sort_values(by="length", ascending=True)
     fig,ax = plt.subplots()
     data["straight_loss"] = data.apply(lambda x: -0.005 * x.length, axis=1)
-    ax.scatter(data["length"], data["loss"], label="loss", color="red")
-    ax.scatter(data["length"], data["straight_loss"], label="straight_loss", color="blue")
+    ax.scatter(data["length"], data["loss"], label="loss", color="red", s=6)
+    plt.ylabel('loss(db)')
+    plt.xlabel('length(mm)')
+    # ax.scatter(data["length"], data["straight_loss"], label="straight_loss", color="blue")
     plt.gca().invert_yaxis()
     plt.savefig("loss-length"+filename+".png")
 
-    data["crossing"] = data.apply(lambda x: float(x.crossing), axis=1)
+    # loss to number of crossings
     data = data.sort_values(by="crossing", ascending=True)
     fig,ax = plt.subplots()
-    ax.scatter(data["crossing"], data["loss"], label="loss", color="red")
+    ax.scatter(data["crossing"], data["loss"], label="loss", color="red", s=6)
+    plt.ylabel('loss(db)')
+    plt.xlabel('number of crossings')
     plt.gca().invert_yaxis()
     plt.savefig("loss-crossing"+filename+".png")
