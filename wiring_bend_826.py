@@ -5,7 +5,6 @@ import matplotlib
 import matplotlib.pyplot as plt
 matplotlib.rcParams['xtick.direction'] = 'in'
 matplotlib.rcParams['ytick.direction'] = 'in'
-matplotlib.rcParams['mathtext.fontset'] = 'custom'
 matplotlib.rcParams['mathtext.rm'] = 'Arial'
 
 class data_linewidth_plot():
@@ -212,7 +211,7 @@ def plotter_bend(df_rect: pd.DataFrame,
     df["theta"] = df.apply(lambda x: [calc_theta(x.dx, d) if x.dx<bend_radius*2 and x.dx!=0 else theta_map[dir_map.index(d)] for d in x.dir], axis=1)
     print("******** Output Routed waveguides to svg file and pdf file ********")
     # fig.savefig(save_folder+file_name+'.svg', dpi=3000, format='svg')
-    fig.savefig(save_folder+file_name+'.png', dpi=3000, format='png')
+    # fig.savefig(save_folder+file_name+'.png', dpi=3000, format='png')
     fig.savefig(save_folder+file_name+'.pdf', dpi=3000, format='pdf')
 
     df.to_excel(save_folder + file_name + ".xlsx")

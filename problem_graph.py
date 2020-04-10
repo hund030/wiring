@@ -72,27 +72,25 @@ def create_sim_space(file_name: str = "./fiberBoard896.xls", save_folder: str = 
     return df
 
 
-def create_sim_space_826(file_name: str = "./fiberBoard826.xls", save_folder: str = './results/', line_width: float = 0.05, line_dist: float = 0.25, channel_num: int = 12, height: int = 150) -> pd.DataFrame:
+def create_sim_space(file_name: str, save_folder: str = './results/', line_width: float = 0.05, line_dist: float = 0.25, channel_num: int = 12, height: int = 150, N: int = 256) -> pd.DataFrame:
     data = pd.read_excel(file_name)
 
     BeginPointX = 0
     BeginPointY = 0
     BeginPointZ = 0
 
-    # serial number for each port 
-    '''
-    above_list = [29, 26, 21, 20, 24, 17, 10, 16, 18, 19, 2, 13, 12, 14, 9, 8]
-    below_list = [53, 54, 56, 57, 58, 48, 47, 49, 51, 41, 33, 11, 38, 39, 1, 6]
-    '''
-    above_list = [21, 116, 29, 114, 26, 113, 20, 117, 24, 118, 18, 107, 19, 108, 16, 109, 17, 101, 10, 111, 2, 12, 13, 98, 71, 99, 14, 93, 8, 61, 9, 66]
-    below_list = [53, 89, 54, 80, 56, 81, 57, 86, 58, 84, 47, 79, 48, 78, 49, 76, 51, 77, 41, 70, 11, 62, 38, 74, 39, 72, 1, 73, 33, 68, 6, 69]
-    # distance to the previous port
-    '''
-    above_dist = [6.5] + [9] * (len(above_list)-1)
-    below_dist = [2] + [9] * (len(below_list)-1)
-    '''
-    above_dist = [4] + [4.5] * (len(above_list)-1)
-    below_dist = [2] + [4.5] * (len(below_list)-1)
+    if N == 256:
+        # serial number for each port 
+        above_list = [29, 26, 21, 20, 24, 17, 10, 16, 18, 19, 2, 13, 12, 14, 9, 8]
+        below_list = [53, 54, 56, 57, 58, 48, 47, 49, 51, 41, 33, 11, 38, 39, 1, 6]
+        # distance to the previous port
+        above_dist = [6.5] + [9] * (len(above_list)-1)
+        below_dist = [2] + [9] * (len(below_list) - 1)
+    elif N == 512:
+        above_list = [21, 116, 29, 114, 26, 113, 20, 117, 24, 118, 18, 107, 19, 108, 16, 109, 17, 101, 10, 111, 2, 12, 13, 98, 71, 99, 14, 93, 8, 61, 9, 66]
+        below_list = [54, 89, 54, 80, 56, 81, 57, 86, 58, 84, 47, 79, 48, 78, 49, 76, 51, 77, 41, 70, 11, 62, 38, 74, 39, 72, 1, 73, 33, 68, 6, 69]
+        above_dist = [4] + [4.5] * (len(above_list)-1)
+        below_dist = [2] + [4.5] * (len(below_list)-1)
     above_dist = np.cumsum(above_dist)
     below_dist = np.cumsum(below_dist)
 
