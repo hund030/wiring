@@ -149,23 +149,7 @@ def calc_index(data: pd.DataFrame,
         ll = [6.33, 7.33, 8.33, 9.23, 10.05, 11.53]
         total_loss = tl[r.index(bend_radius)]
         length = ll[r.index(bend_radius)]
-        '''
-        if bend_radius == 3:
-            total_loss = -10.59  # db
-            length = 7.33  # mm
-        elif bend_radius == 4:
-            total_loss = -6.08  # db
-            length = 8.33  # mm
-        elif bend_radius == 5:
-            total_loss = -2.80  # db
-            length = 9.23  # mm
-        elif bend_radius == 6:
-            total_loss = -2.03  # db
-            length = 10.05  # mm
-        elif bend_radius == 8:
-            total_loss = -1.39  # db
-            length = 11.53  # mm
-        '''
+
         bend_loss = total_loss / length  #db/mm
         straight_loss = -0.005  #db/mm
         l = 0
