@@ -14,11 +14,11 @@ File_Name = "./fiberBoard"+str(N)+".xlsx"
 Line_Width = 0.05
 # the minimal Distance between parallel lines, unit: mm
 # Dist = 0.2
-Dist = 0.25
+Dist = 0.125
 # save folder
 Save_Folder = './results/'
 # minimal bend radius, unit: mm
-Bend_Radius = 4
+Bend_Radius = 5
 # bend.svg accuracy, unit: mm
 Delta_Arc = 0.001
 # mm
