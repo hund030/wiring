@@ -181,3 +181,18 @@ def create_sim_space(file_name: str, save_folder: str = './results/', line_width
     data.to_excel("./fiberBoard0data.xlsx")
 
     return data
+
+def read_sim_space(SimSpace: str) -> pd.DataFrame:
+    data = pd.read_excel(SimSpace)
+    data["Port1"] = data.apply(lambda x: int(x.Port1), axis=1)
+    data["Port2"] = data.apply(lambda x: int(x.Port2), axis=1)
+    data["index1"] = data.apply(lambda x: int(x.index1), axis=1)
+    data["index2"] = data.apply(lambda x: int(x.index2), axis=1)
+    data["sy"] = data.apply(lambda x: int(x.sy), axis=1)
+    data["ly"] = data.apply(lambda x: int(x.ly), axis=1)
+    data["sx"] = data.apply(lambda x: float(x.sx), axis=1)
+    data["lx"] = data.apply(lambda x: float(x.lx), axis=1)
+    data["dx"] = data.apply(lambda x: float(x.dx), axis=1)
+    data["dz"] = data.apply(lambda x: int(x.dz), axis=1)
+    data["ln"] = data.apply(lambda x: int(x.ln), axis=1)
+    return data

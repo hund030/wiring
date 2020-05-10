@@ -55,7 +55,7 @@ def plotter_rect(df: pd.DataFrame, line_width: float, dist: float, save_folder: 
                     return False
         elif _type == 'below2above':
             for j in range(1,3):
-                if i>=j and WGset[i-j].WGs and WGset[i - j].rEnd[-1] > lEnd and WGset[i-j].rEnd[-1] != rEnd:
+                if i>=j and WGset[i-j].WGs and WGset[i - j].rEnd[-1] > lEnd:
                     return False
             for j in range(1,ln_calc(lx, ly)):
                 if i + j < len(WGset) and WGset[i + j].WGs and WGset[i+j].rEnd[-1] > rEnd:
@@ -71,7 +71,7 @@ def plotter_rect(df: pd.DataFrame, line_width: float, dist: float, save_folder: 
 
         df2 = df.copy()
         df2 = df2[(df2["sy"]==0) & (df2["ly"]==0)]
-        # df2 = df2.sort_values(by=["index2", "sx"], ascending=[False, True])
+        df2 = df2.sort_values(by="sx", ascending=True)
         if N == 256:
             list_inflection = [(i * dist + interface_length \
                 for i in range(df2[df2["dz"] == layer].shape[0])) for layer in range(4)]
@@ -140,7 +140,7 @@ def plotter_rect(df: pd.DataFrame, line_width: float, dist: float, save_folder: 
         # df2['inflection'] = df2.apply(lambda x: x.inflection + max(next(it[int(x.dz)])-x.lx, 0), axis=1)
         it = [iter(lx[i]) for i in range(4)]
         df2['lx'] = df2.apply(lambda x: next(it[int(x.dz)]), axis=1)
-        
+
         df2["dx"] = df2.apply(lambda x: np.abs(x.sx - x.lx), axis=1)
         df2['inflection_x'] = df2.apply(lambda x: f_inflection_x(x), axis=1)
         df2['inflection_y'] = df2.apply(lambda x: f_inflection_y(x), axis=1)
@@ -161,7 +161,7 @@ def plotter_rect(df: pd.DataFrame, line_width: float, dist: float, save_folder: 
 
         df4 = df.copy()
         df4 = df4[(df4["sy"]!=0) & (df4["ly"]!=0)]
-        # df4 = df4.sort_values(by=["index2", "sx"], ascending=[False, True])
+        df4 = df4.sort_values(by="sx", ascending=True)
 
         if N == 256:
             list_inflection = [(height - (i * dist + interface_length) \
@@ -208,7 +208,7 @@ def plotter_rect(df: pd.DataFrame, line_width: float, dist: float, save_folder: 
                 i += 1
             sx[layer] = [sx_temp[sx[layer].index(sx_temp[i])] for i in range(len(sx[layer]))]
         it = [iter(sx[i]) for i in range(4)]
-        df4['sx'] = df4.apply(lambda x: next(it[int(x.dz)]), axis=1)
+        # df4['sx'] = df4.apply(lambda x: next(it[int(x.dz)]), axis=1)
 
         df4 = df4.sort_values(by="lx", ascending=True)
         lx = []
@@ -271,6 +271,7 @@ def plotter_rect(df: pd.DataFrame, line_width: float, dist: float, save_folder: 
                     if w.y >= above_line:
                         continue
                     if row[1]['index2'] >= w.rEnd[-1] and \
+                       row[1]['index1'] != w.rEnd[-1] and \
                        noCross(row[1]['index2'], row[1]['index1']-32, i, \
                        lx = row[1]['sx'], ly = row[1]['sy'], WGset=WGsets[layer], _type='below2above'):
                     # if not w.WGs and noCross(row[1]['index2']+32, row[1]['index1'], i, WGsets[layer], 'below2above'):
@@ -372,9 +373,9 @@ def plotter_rect(df: pd.DataFrame, line_width: float, dist: float, save_folder: 
         x_list = df['inflection_x'].tolist()[i]
         y_list = df['inflection_y'].tolist()[i]
         ax.plot(x_list, y_list, color='g', linewidth=line_width, alpha=0.8)
-    fig.savefig(save_folder + 'fiberBoard256_rect.pdf', dpi=3000, format='pdf')
+    fig.savefig(save_folder + "fiberBoard"+str(N)+"_rect.pdf", dpi=3000, format='pdf')
 
-    df.to_excel(save_folder + "fiberBoard256rect.xlsx")
+    df.to_excel(save_folder + "fiberBoard"+str(N)+"rect.xlsx")
 
     return df
 
