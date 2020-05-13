@@ -7,58 +7,81 @@ from typing import List
 interface_length = 5
 
 @dataclass
-class WGset:
+class WGyset:
     WGs: List[int] = field(default_factory=list)
     rEnd: List[int] = field(default_factory=list)
     lEnd: List[int] = field(default_factory=list)
     y: float = interface_length
 
-def plotter_rect(df: pd.DataFrame, line_width: float, dist: float, save_folder: str = './results/', height: int = 150, N: int = 256) -> pd.DataFrame:
+@dataclass
+class MT:
+    x: List[float] = field(default_factory=list)
+    y: List[float] = field(default_factory=list)
+
+@dataclass
+class MTset:
+    MTabove: List[MT] = field(default_factory=list)
+    MTbelow: List[MT] = field(default_factory=list)
+
+def plotter_rect(df: pd.DataFrame, line_width: float, dist: float,
+                save_folder: str = './results/', height: int = 150,
+                N: int = 256, r:float = 5) -> pd.DataFrame:
 
     yy = [np.round(i * 0.001, 3) for i in range(interface_length * 1000, (height - interface_length) * 1000, int(dist * 1000))]
-    WGsets = [[WGset(y=y, rEnd=[-1], lEnd=[100]) for y in yy] for layer in range(4)]
+    WGysets = [[WGyset(y=y, rEnd=[-1], lEnd=[100]) for y in yy] for layer in range(4)]
 
     def ln_calc(lx, ly):
         # TODO: magic number here
         offset = 4 if ly == height else 2
-        return max(int(np.round((lx - offset) % 4.5, 3) / dist) - 7, 4)
+        return max(int(np.round((lx - offset) % 4.5, 3) / dist) - 6, 4)
 
-    def sn_calc(sx, sy):
-        pass
+    def sn_calc(idx2, y, isBelow=True):
+        if isBelow:
+            for i, it in enumerate(nodes.MTbelow[idx2].y):
+                if it >= y + r:
+                    return i
+                elif it >= y:
+                    return - i
+        else:
+            for i, it in enumerate(nodes.MTabove[idx2].y):
+                if it <= y - r:
+                    return i
+                elif it <= y:
+                    return - i
 
-    def noCross(lEnd, rEnd, i, WGset, _type='below', lx=0, ly=0, boundary=0):
+    def noCross(lEnd, rEnd, i, WGyset, _type='below', lx=0, ly=0, boundary=0):
         #TODO: 6 and 8 are magic numbers here
         if _type == 'below':
-            for j in range(1,ln_calc(lx, ly)):
-                if i>=j and WGset[i-j].WGs and WGset[i - j].rEnd[-1] < rEnd and WGset[i-j].lEnd[-1] < lEnd:
+            for j in range(1,ln_calc(lx, ly) - sn_calc(lEnd+1, WGyset[i].y)):
+                if i >= j and WGyset[i - j].WGs and WGyset[i - j].rEnd[-1] < rEnd and WGyset[i - j].lEnd[-1] < lEnd:
                     return False
-                elif i >= j and len(WGset[i - j].rEnd) > 2 and WGset[i - j].rEnd[-2] < lEnd:
+                elif i >= j and len(WGyset[i - j].rEnd) > 2 and WGyset[i - j].rEnd[-2] < lEnd:
                     return False
             for j in range(1,8):
-                if i+j<len(WGset) and WGset[i+j].WGs and WGset[i + j].rEnd[-1] > lEnd:
+                if i+j<len(WGyset) and WGyset[i+j].WGs and WGyset[i + j].rEnd[-1] > lEnd:
                     return False
         elif _type == 'above2below':
             for j in range(1, 4):
-                if i>=j and WGset[i-j].WGs and WGset[i - j].lEnd[-1] < lEnd:
+                if i>=j and WGyset[i-j].WGs and WGyset[i - j].lEnd[-1] < lEnd:
                     return False
             for j in range(1,6):
-                if i+j<len(WGset) and WGset[i+j].WGs and WGset[i + j].rEnd[-1] > lEnd:
+                if i+j<len(WGyset) and WGyset[i+j].WGs and WGyset[i + j].rEnd[-1] > lEnd:
                     return False
         elif _type == 'above':
-            for j in range(1,ln_calc(lx, ly)):
-                if i + j < len(WGset) and WGset[i + j].WGs and WGset[i + j].rEnd[-1] != rEnd:
+            for j in range(1,ln_calc(lx, ly) - sn_calc(lEnd+1, WGyset[i].y, False)):
+                if i + j < len(WGyset) and WGyset[i + j].WGs and WGyset[i + j].rEnd[-1] != rEnd:
                     return False
-                elif i + j < len(WGset) and len(WGset[i + j].rEnd) > 1 and WGset[i+j].rEnd[-2] > lEnd:
+                elif i + j < len(WGyset) and len(WGyset[i + j].rEnd) > 1 and WGyset[i+j].rEnd[-2] > lEnd:
                     return False
-            for j in range(1,7):
-                if i>=j and WGset[i-j].WGs and WGset[i - j].rEnd[-1] > lEnd:
+            for j in range(1,8):
+                if i>=j and WGyset[i-j].WGs and WGyset[i - j].rEnd[-1] > lEnd:
                     return False
         elif _type == 'below2above':
             for j in range(1,3):
-                if i>=j and WGset[i-j].WGs and WGset[i - j].rEnd[-1] > lEnd:
+                if i>=j and WGyset[i-j].WGs and WGyset[i - j].rEnd[-1] > lEnd:
                     return False
             for j in range(1,ln_calc(lx, ly)):
-                if i + j < len(WGset) and WGset[i + j].WGs and WGset[i+j].rEnd[-1] > rEnd:
+                if i + j < len(WGyset) and WGyset[i + j].WGs and WGyset[i+j].rEnd[-1] > rEnd:
                     return False
         return True
 
@@ -82,15 +105,18 @@ def plotter_rect(df: pd.DataFrame, line_width: float, dist: float, save_folder: 
                 indexes = set()
                 list_inflection += [[]]
                 for row in df2[df2["dz"] == layer].iterrows():
-                    if row[1]['index1'] not in indexes:
-                        indexes.add(row[1]['index1'])
-                    for i, w in enumerate(WGsets[layer]):
-                        if row[1]['index2'] >= w.rEnd[-1] and \
-                          noCross(row[1]['index2'], row[1]['index1'], i, \
-                          lx=row[1]['lx'], ly=row[1]['ly'], WGset=WGsets[layer]):
+                    idx1, idx2 = int(row[1]['index1'] - 32), int(row[1]['index2'] - 32)
+                    if idx1 not in indexes:
+                        indexes.add(idx1)
+                    for i, w in enumerate(WGysets[layer]):
+                        if idx2 >= w.rEnd[-1] and \
+                          noCross(idx2, idx1, i, \
+                          lx=row[1]['lx'], ly=row[1]['ly'], WGyset=WGysets[layer]):
                             w.WGs.append(row[0])
-                            w.rEnd.append(row[1]['index1'])
-                            w.lEnd.append(row[1]['index2'])
+                            w.rEnd.append(idx1)
+                            w.lEnd.append(idx2)
+                            nodes.MTbelow[idx1].y[nodes.MTbelow[idx1].x.index(row[1]['sx'])] = w.y
+                            nodes.MTbelow[idx2].y[nodes.MTbelow[idx2].x.index(row[1]['lx'])] = w.y
                             list_inflection[layer] += [w.y]
                             break
 
@@ -171,19 +197,20 @@ def plotter_rect(df: pd.DataFrame, line_width: float, dist: float, save_folder: 
             for layer in range(4):
                 i = 0
                 indexes = set()
-                gap = 0
                 list_inflection += [[]]
                 for row in df4[df4["dz"] == layer].iterrows():
-                    if row[1]['index1'] not in indexes:
-                        indexes.add(row[1]['index1'])
-                        gap = 1
-                    for i, w in reversed(list(enumerate(WGsets[layer]))):
-                        if row[1]['index2'] >= w.rEnd[-1] and \
-                           noCross(row[1]['index2'], row[1]['index1'], i, \
-                           lx = row[1]['lx'], ly = row[1]['ly'], WGset=WGsets[layer], _type='above'):
+                    idx1, idx2 = int(row[1]['index1']), int(row[1]['index2'])
+                    if idx1 not in indexes:
+                        indexes.add(idx1)
+                    for i, w in reversed(list(enumerate(WGysets[layer]))):
+                        if idx2 >= w.rEnd[-1] and \
+                           noCross(idx2, idx1, i, \
+                           lx = row[1]['lx'], ly = row[1]['ly'], WGyset=WGysets[layer], _type='above'):
                             w.WGs.append(row[0])
-                            w.rEnd.append(row[1]['index1'])
-                            w.lEnd.append(row[1]['index2'])
+                            w.rEnd.append(idx1)
+                            w.lEnd.append(idx2)
+                            nodes.MTabove[idx1].y[nodes.MTabove[idx1].x.index(row[1]['sx'])] = w.y
+                            nodes.MTabove[idx2].y[nodes.MTabove[idx2].x.index(row[1]['lx'])] = w.y
                             list_inflection[layer] += [w.y]
                             break
         
@@ -208,7 +235,7 @@ def plotter_rect(df: pd.DataFrame, line_width: float, dist: float, save_folder: 
                 i += 1
             sx[layer] = [sx_temp[sx[layer].index(sx_temp[i])] for i in range(len(sx[layer]))]
         it = [iter(sx[i]) for i in range(4)]
-        # df4['sx'] = df4.apply(lambda x: next(it[int(x.dz)]), axis=1)
+        df4['sx'] = df4.apply(lambda x: next(it[int(x.dz)]), axis=1)
 
         df4 = df4.sort_values(by="lx", ascending=True)
         lx = []
@@ -229,8 +256,6 @@ def plotter_rect(df: pd.DataFrame, line_width: float, dist: float, save_folder: 
                 i += 1
             lx[layer] = [lx_temp[lx[layer].index(lx_temp[i])] for i in range(len(lx[layer]))]
 
-        # it = [iter(lx[i]) for i in range(4)]
-        # df4['inflection'] = df4.apply(lambda x: x.inflection - max(next(it[int(x.dz)])-x.lx, 0), axis=1)
         it = [iter(lx[i]) for i in range(4)]
         df4['lx'] = df4.apply(lambda x: next(it[int(x.dz)]), axis=1)
         df4["dx"] = df4.apply(lambda x: np.abs(x.sx - x.lx), axis=1)
@@ -267,14 +292,14 @@ def plotter_rect(df: pd.DataFrame, line_width: float, dist: float, save_folder: 
                 if row[1]['index1'] not in indexes:
                     indexes.add(row[1]['index1'])
                     gap = 1
-                for i, w in reversed(list(enumerate(WGsets[layer]))):
+                for i, w in reversed(list(enumerate(WGysets[layer]))):
                     if w.y >= above_line:
                         continue
                     if row[1]['index2'] >= w.rEnd[-1] and \
                        row[1]['index1'] != w.rEnd[-1] and \
                        noCross(row[1]['index2'], row[1]['index1']-32, i, \
-                       lx = row[1]['sx'], ly = row[1]['sy'], WGset=WGsets[layer], _type='below2above'):
-                    # if not w.WGs and noCross(row[1]['index2']+32, row[1]['index1'], i, WGsets[layer], 'below2above'):
+                       lx = row[1]['sx'], ly = row[1]['sy'], WGyset=WGysets[layer], _type='below2above'):
+                    # if not w.WGs and noCross(row[1]['index2']+32, row[1]['index1'], i, WGysets[layer], 'below2above'):
                         w.WGs.append(row[0])
                         w.rEnd.append(row[1]['index1']-32)
                         w.lEnd.append(row[1]['index2'])
@@ -315,13 +340,13 @@ def plotter_rect(df: pd.DataFrame, line_width: float, dist: float, save_folder: 
             for row in df5[df5["dz"] == layer].iterrows():
                 if row[1]['index1'] not in indexes:
                     indexes.add(row[1]['index1'])
-                for i, w in enumerate(WGsets[layer]):
+                for i, w in enumerate(WGysets[layer]):
                     if w.y < below_line:
                         continue
                     # TODO:32 is a magic number here
                     if row[1]['index2'] - 32 > w.rEnd[-1] and \
                        noCross(row[1]['index2'] - 32, row[1]['index1'], i, \
-                       lx = row[1]['lx'], ly = row[1]['ly'], WGset=WGsets[layer], \
+                       lx = row[1]['lx'], ly = row[1]['ly'], WGyset=WGysets[layer], \
                        _type='above2below'):
                         w.WGs.append(row[0])
                         w.rEnd.append(row[1]['index1'])
@@ -357,6 +382,30 @@ def plotter_rect(df: pd.DataFrame, line_width: float, dist: float, save_folder: 
         df5['inflection_y'] = df5.apply(lambda x: f_inflection_y(x), axis=1)
         return df5
 
+    def add_port(it, nodes, l):
+        if it.index1 >= l:
+        # the node is on below
+            nodes.MTbelow[int(it.index1-l)].x.append(it.sx)
+        else:
+        # the node is on above
+            nodes.MTabove[int(it.index1)].x.append(it.sx)
+
+        if it.index2 >= l:
+            nodes.MTbelow[int(it.index2-l)].x.append(it.lx)
+        else:
+            nodes.MTabove[int(it.index2)].x.append(it.lx)
+        
+    def init_MT_set(df, N=512) -> MTset:
+        nodes = MTset(MTabove=[], MTbelow=[])
+        for i in range(int(N / 16)):
+            nodes.MTabove.append(MT(x=[], y=[0]*16))
+            nodes.MTbelow.append(MT(x=[], y=[height]*16))
+        df.apply(lambda x: add_port(x, nodes, int(N / 16)), axis=1)
+        for mt in nodes.MTabove + nodes.MTbelow:
+            mt.x.sort()
+        return nodes
+
+    nodes = init_MT_set(df, N)
     df2 = wiring_rect_below(dist, df)
     df4 = wiring_rect_above(dist, df)
     df3 = wiring_rect_below2above(dist, df, df4)

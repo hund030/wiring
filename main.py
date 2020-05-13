@@ -30,7 +30,7 @@ def main() -> None:
     print("******* Start! ********")
     print("******* Routing the waveguides without bend... ********")
     df = create_sim_space(Src, SaveFolder, Line_Width, Dist, height=height, N=N)
-    df_rect = plotter_rect(df, Line_Width, Dist+Line_Width, SaveFolder, height=height, N=N)
+    df_rect = plotter_rect(df, Line_Width, Dist+Line_Width, SaveFolder, height=height, N=N, r=Bend_Radius)
     # svg2dwgscr_rect(df_rect, "fiberBoard"+str(N)+"rect.scr", SaveFolder)
     print("******* Adding bend to the routed plain... ********")
     df_bend = plotter_bend(df_rect, Line_Width, Dist + Line_Width, Bend_Radius, Delta_Arc, SaveFolder, "fiberBoard"+str(N)+"bend")
