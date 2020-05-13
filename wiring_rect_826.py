@@ -36,6 +36,9 @@ def plotter_rect(df: pd.DataFrame, line_width: float, dist: float,
         return max(int(np.round((lx - offset) % 4.5, 3) / dist) - 6, 4)
 
     def sn_calc(idx2, y, isBelow=True):
+        if idx2 >= len(nodes.MTabove):
+            return 8
+
         if isBelow:
             for i, it in enumerate(nodes.MTbelow[idx2].y):
                 if it >= y + r:
@@ -48,6 +51,7 @@ def plotter_rect(df: pd.DataFrame, line_width: float, dist: float,
                     return i
                 elif it <= y:
                     return - i
+        return 8
 
     def noCross(lEnd, rEnd, i, WGyset, _type='below', lx=0, ly=0, boundary=0):
         #TODO: 6 and 8 are magic numbers here
@@ -61,7 +65,7 @@ def plotter_rect(df: pd.DataFrame, line_width: float, dist: float,
                 if i+j<len(WGyset) and WGyset[i+j].WGs and WGyset[i + j].rEnd[-1] > lEnd:
                     return False
         elif _type == 'above2below':
-            for j in range(1, 4):
+            for j in range(1, ln_calc(lx, ly) - sn_calc(lEnd+1, WGyset[i].y)):
                 if i>=j and WGyset[i-j].WGs and WGyset[i - j].lEnd[-1] < lEnd:
                     return False
             for j in range(1,6):
@@ -77,10 +81,10 @@ def plotter_rect(df: pd.DataFrame, line_width: float, dist: float,
                 if i>=j and WGyset[i-j].WGs and WGyset[i - j].rEnd[-1] > lEnd:
                     return False
         elif _type == 'below2above':
-            for j in range(1,3):
+            for j in range(1,6):
                 if i>=j and WGyset[i-j].WGs and WGyset[i - j].rEnd[-1] > lEnd:
                     return False
-            for j in range(1,ln_calc(lx, ly)):
+            for j in range(1,ln_calc(lx, ly) - sn_calc(lEnd+1, WGyset[i].y, False)):
                 if i + j < len(WGyset) and WGyset[i + j].WGs and WGyset[i+j].rEnd[-1] > rEnd:
                     return False
         return True
@@ -162,8 +166,6 @@ def plotter_rect(df: pd.DataFrame, line_width: float, dist: float,
                 i += 1
             lx[layer] = [lx_temp[lx[layer].index(lx_temp[i])] for i in range(len(lx[layer]))]
 
-        # it = [iter(lx[i]) for i in range(4)]
-        # df2['inflection'] = df2.apply(lambda x: x.inflection + max(next(it[int(x.dz)])-x.lx, 0), axis=1)
         it = [iter(lx[i]) for i in range(4)]
         df2['lx'] = df2.apply(lambda x: next(it[int(x.dz)]), axis=1)
 
@@ -205,7 +207,8 @@ def plotter_rect(df: pd.DataFrame, line_width: float, dist: float,
                     for i, w in reversed(list(enumerate(WGysets[layer]))):
                         if idx2 >= w.rEnd[-1] and \
                            noCross(idx2, idx1, i, \
-                           lx = row[1]['lx'], ly = row[1]['ly'], WGyset=WGysets[layer], _type='above'):
+                                   lx=row[1]['lx'], ly=row[1]['ly'], \
+                                   WGyset=WGysets[layer], _type='above'):
                             w.WGs.append(row[0])
                             w.rEnd.append(idx1)
                             w.lEnd.append(idx2)
@@ -286,23 +289,25 @@ def plotter_rect(df: pd.DataFrame, line_width: float, dist: float,
         for layer in range(4):
             i = 0
             indexes = set()
-            gap = 0
             list_inflection += [[]]
             for row in df3[df3["dz"] == layer].iterrows():
-                if row[1]['index1'] not in indexes:
-                    indexes.add(row[1]['index1'])
+                idx1, idx2 = int(row[1]['index1'] - 32), int(row[1]['index2'])
+                if idx1 not in indexes:
+                    indexes.add(idx1)
                     gap = 1
                 for i, w in reversed(list(enumerate(WGysets[layer]))):
                     if w.y >= above_line:
                         continue
-                    if row[1]['index2'] >= w.rEnd[-1] and \
-                       row[1]['index1'] != w.rEnd[-1] and \
-                       noCross(row[1]['index2'], row[1]['index1']-32, i, \
-                       lx = row[1]['sx'], ly = row[1]['sy'], WGyset=WGysets[layer], _type='below2above'):
+                    if idx2 >= w.rEnd[-1] and idx1 != w.rEnd[-1] and \
+                       noCross(idx2, idx1, i, \
+                               lx=row[1]['sx'], ly=row[1]['sy'], \
+                               WGyset=WGysets[layer], _type='below2above'):
                     # if not w.WGs and noCross(row[1]['index2']+32, row[1]['index1'], i, WGysets[layer], 'below2above'):
                         w.WGs.append(row[0])
-                        w.rEnd.append(row[1]['index1']-32)
-                        w.lEnd.append(row[1]['index2'])
+                        w.rEnd.append(idx1)
+                        w.lEnd.append(idx2)
+                        nodes.MTbelow[idx1].y[nodes.MTbelow[idx1].x.index(row[1]['sx'])] = w.y
+                        nodes.MTabove[idx2].y[nodes.MTabove[idx2].x.index(row[1]['lx'])] = w.y
                         list_inflection[layer] += [w.y]
                         break
 
@@ -338,24 +343,28 @@ def plotter_rect(df: pd.DataFrame, line_width: float, dist: float,
             indexes = set()
             list_inflection += [[]]
             for row in df5[df5["dz"] == layer].iterrows():
-                if row[1]['index1'] not in indexes:
-                    indexes.add(row[1]['index1'])
+                # TODO:32 is a magic number here
+                idx1, idx2 = int(row[1]['index1']), int(row[1]['index2'] - 32)
+                if idx1 not in indexes:
+                    indexes.add(idx1)
                 for i, w in enumerate(WGysets[layer]):
                     if w.y < below_line:
                         continue
-                    # TODO:32 is a magic number here
-                    if row[1]['index2'] - 32 > w.rEnd[-1] and \
-                       noCross(row[1]['index2'] - 32, row[1]['index1'], i, \
-                       lx = row[1]['lx'], ly = row[1]['ly'], WGyset=WGysets[layer], \
-                       _type='above2below'):
+                    if idx2 > w.rEnd[-1] and \
+                       noCross(idx2, idx1, i, \
+                       lx=row[1]['lx'], ly=row[1]['ly'], \
+                       WGyset=WGysets[layer], _type='above2below'):
                         w.WGs.append(row[0])
-                        w.rEnd.append(row[1]['index1'])
-                        w.lEnd.append(row[1]['index2']-32)
+                        w.rEnd.append(idx1)
+                        w.lEnd.append(idx2)
+                        nodes.MTabove[idx1].y[nodes.MTabove[idx1].x.index(row[1]['sx'])] = w.y
+                        nodes.MTbelow[idx2].y[nodes.MTbelow[idx2].x.index(row[1]['lx'])] = w.y
                         list_inflection[layer] += [w.y]
                         break
     
         it = [iter(list_inflection[i]) for i in range(4)]
         df5['inflection'] = df5.apply(lambda x: next(it[int(x.dz)], height+10), axis=1)
+        
         df5 = df5.sort_values(by="sx", ascending=True)
         sx = []
         for layer in range(4):
@@ -376,7 +385,7 @@ def plotter_rect(df: pd.DataFrame, line_width: float, dist: float,
             sx[layer] = [sx_temp[sx[layer].index(sx_temp[i])] for i in range(len(sx[layer]))]
 
         it = [iter(sx[i]) for i in range(4)]
-        df5['sx'] = df5.apply(lambda x: next(it[int(x.dz)]), axis=1)
+        # df5['sx'] = df5.apply(lambda x: next(it[int(x.dz)]), axis=1)
         df5["dx"] = df5.apply(lambda x: np.abs(x.sx - x.lx), axis=1)
         df5['inflection_x'] = df5.apply(lambda x: f_inflection_x(x), axis=1)
         df5['inflection_y'] = df5.apply(lambda x: f_inflection_y(x), axis=1)
