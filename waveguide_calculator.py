@@ -187,18 +187,17 @@ def calc_index(data: pd.DataFrame,
 def draw_chart(data: pd.DataFrame, filename: str):
     plt.clf()
 
-    data["loss"] = data.apply(lambda x: float(x.loss), axis=1)
+    data["loss"] = data.apply(lambda x: -float(x.loss), axis=1)
     data["length"] = data.apply(lambda x: float(x.length), axis=1)
     data["crossing"] = data.apply(lambda x: float(x.crossing), axis=1)
 
     n, bins, patches = plt.hist(data["loss"], bins=64)
-    plt.ylabel('loss(db)')
-    plt.xlabel('counts')
-    plt.gca().invert_xaxis()
+    plt.ylabel('Counts', family="Arial", fontsize=16)
+    plt.xlabel('Loss (dB)', family="Arial", fontsize=16)
     xmin, xmax = plt.xlim()
 
     loss_mu, loss_std = nm.fit(data["loss"])
-    y = nm.pdf(bins, loss_mu, loss_std) * (xmin - xmax) / 64 * int(filename)
+    y = nm.pdf(bins, loss_mu, loss_std) * (xmax - xmin) / 64 * int(filename)
     plt.plot(bins, y, 'r--', linewidth=2)
     plt.savefig("loss-count"+filename+".png")
 
@@ -207,17 +206,15 @@ def draw_chart(data: pd.DataFrame, filename: str):
     fig,ax = plt.subplots()
     data["straight_loss"] = data.apply(lambda x: -0.005 * x.length, axis=1)
     ax.scatter(data["length"], data["loss"], label="loss", color="red", s=6)
-    plt.ylabel('loss(db)')
-    plt.xlabel('length(mm)')
+    plt.ylabel('Loss (dB)', family="Arial", fontsize=16)
+    plt.xlabel('Length (mm)', family="Arial", fontsize=16)
     # ax.scatter(data["length"], data["straight_loss"], label="straight_loss", color="blue")
-    plt.gca().invert_yaxis()
     plt.savefig("loss-length"+filename+".png")
 
     # loss to number of crossings
     data = data.sort_values(by="crossing", ascending=True)
     fig,ax = plt.subplots()
     ax.scatter(data["crossing"], data["loss"], label="loss", color="red", s=6)
-    plt.ylabel('loss(db)')
-    plt.xlabel('number of crossings')
-    plt.gca().invert_yaxis()
+    plt.ylabel('Loss (dB)', family="Arial", fontsize=16)
+    plt.xlabel('Number of crossings', family="Arial", fontsize=16)
     plt.savefig("loss-crossing"+filename+".png")
