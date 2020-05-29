@@ -7,6 +7,7 @@ import ast
 import os
 
 min_angle = 90
+count = 0
 def calc_index(data: pd.DataFrame,
                loss: pd.DataFrame,
                line_width: float,
@@ -135,7 +136,9 @@ def calc_index(data: pd.DataFrame,
             lines.append(((row.inflection_x[i], row.inflection_y[i]), (row.inflection_x[i + 1], row.inflection_y[i + 1])))
 
         points = [f(lines, row.center, r[0], r[1], r[2]) for r in data[["inflection_x", "inflection_y", "center"]].values]
+        global count
         points = [p for p in points if p != None]
+        count += len([p for p in points if p >= 20])
 
         if 0 in points:
             print(row, points)
@@ -180,6 +183,7 @@ def calc_index(data: pd.DataFrame,
     print("******** Output the data to excel file ********")
     data.to_excel(file_name)
     print("min angle: ", min_angle)
+    print("count: ", count)
     
     return data
 
