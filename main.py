@@ -14,15 +14,15 @@ File_Name = "./fiberBoard"+str(N)+".xlsx"
 Line_Width = 0.05
 # the minimal Distance between parallel lines, unit: mm
 # Dist = 0.2
-Dist = 0.25
+Dist = 0.125
 # save folder
 Save_Folder = './results/'
 # minimal bend radius, unit: mm
-Bend_Radius = 4
+Bend_Radius = 5
 # bend.svg accuracy, unit: mm
 Delta_Arc = 0.001
 # mm
-height = 150
+height = 200
 width = 150
 
 def main() -> None:
@@ -35,7 +35,6 @@ def main() -> None:
     df_bend = plotter_bend(df_rect, Line_Width, Dist + Line_Width, Bend_Radius, Delta_Arc, Save_Folder, "fiberBoard"+str(N)+"bend")
     # print("******* Converting the data to gds file... ********")
     # svg2gds_bend(df_bend, Line_Width, Bend_Radius, "fiberBoard"+str(N)+"bend.gds", Save_Folder)
-    '''
     print("******* Calculating various index for each waveguide... ********")
     loss = pd.read_excel('crossloss.xlsx')
     df_bend = pd.read_excel(Save_Folder + "fiberBoard"+str(N)+"bend.xlsx")
@@ -45,7 +44,6 @@ def main() -> None:
     data = pd.read_excel("fiberBoard"+str(N)+"calc.xlsx")
     draw_chart(data, str(N))
     print("******* All done! ********")
-    '''
 
 if __name__ == "__main__":
     main()
