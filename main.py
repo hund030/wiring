@@ -4,22 +4,18 @@ from wiring_rect_826 import plotter_rect, svg2dwgscr_rect
 from wiring_bend_826 import plotter_bend, svg2gds_bend
 from waveguide_calculator import calc_index, draw_chart
 # Demands
-# waveguide count
-N = 512
-# File_Name = "./fiberBoard896.xls"
-# File_Name = "./fiberBoard826.xls"
+# channels count
+N = 256
 # save folder
 SaveFolder = "./results/"
 Src = "./fiberBoard" + str(N) + ".xlsx"
 SimSpace = SaveFolder + "fiberBoard" +str(N) + "rect.xlsx"
 # the width of the fibers, unit: mm
-# Line_Width = 0.125
 Line_Width = 0.05
 # the minimal Distance between parallel lines, unit: mm
-# Dist = 0.2
-Dist = 0.125
+Dist = 0.250
 # minimal bend radius, unit: mm
-Bend_Radius = 5
+Bend_Radius = 10
 # bend.svg accuracy, unit: mm
 Delta_Arc = 0.001
 # mm
@@ -35,8 +31,7 @@ def main() -> None:
     print("******* Adding bend to the routed plain... ********")
     df_bend = plotter_bend(df_rect, Line_Width, Dist + Line_Width, Bend_Radius, Delta_Arc, SaveFolder, "fiberBoard"+str(N)+"bend")
     # print("******* Converting the data to gds file... ********")
-    # svg2gds_bend(df_bend, Line_Width, Bend_Radius, "fiberBoard"+str(N)+"bend.gds", SaveFolder)
-    '''
+    svg2gds_bend(df_bend, Line_Width, Bend_Radius, "fiberBoard"+str(N)+"bend.gds", SaveFolder)
     print("******* Calculating various index for each waveguide... ********")
     loss = pd.read_excel('crossloss.xlsx')
     df_bend = pd.read_excel(SaveFolder + "fiberBoard"+str(N)+"bend.xlsx")
@@ -46,7 +41,6 @@ def main() -> None:
     data = pd.read_excel("fiberBoard"+str(N)+"calc.xlsx")
     draw_chart(data, str(N))
     print("******* All done! ********")
-    '''
 
 if __name__ == "__main__":
     main()

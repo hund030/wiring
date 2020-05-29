@@ -144,9 +144,9 @@ def calc_index(data: pd.DataFrame,
         return points
     
     def calc_loss(x):
-        r = [2, 3, 4, 5, 6, 8]
-        tl = [-16.0, -10.59, -6.08, -2.80, -2.03, -1.39]
-        ll = [6.33, 7.33, 8.33, 9.23, 10.05, 11.53]
+        r = [2, 3, 4, 5, 6, 8, 10, 15]
+        tl = [-16.0, -10.59, -6.08, -2.80, -2.03, -1.39, -0.87, -0.45]
+        ll = [6.33, 7.33, 8.33, 9.23, 10.05, 11.53, 12.92, 15.74]
         total_loss = tl[r.index(bend_radius)]
         length = ll[r.index(bend_radius)]
 

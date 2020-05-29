@@ -4,7 +4,7 @@ import numpy as np
 from dataclasses import dataclass, field
 from typing import List
 
-interface_length = 5
+interface_length = 10
 
 @dataclass
 class WGyset:
@@ -32,8 +32,12 @@ def plotter_rect(df: pd.DataFrame, line_width: float, dist: float,
 
     def ln_calc(lx, ly):
         # TODO: magic number here
-        offset = 4 if ly == height else 2
-        return max(int(np.round((lx - offset) % 4.5, 3) / dist) - 6, 4)
+        if N == 256:
+            offset = 6.5 if ly == height else 2
+            return max(int(np.round((lx - offset) % 9, 3) / dist) - 6, 4)
+        elif N == 512:
+            offset = 4 if ly == height else 2
+            return max(int(np.round((lx - offset) % 4.5, 3) / dist) - 6, 4)
 
     def sn_calc(idx2, y, isBelow=True):
         if idx2 >= len(nodes.MTabove):
@@ -99,30 +103,28 @@ def plotter_rect(df: pd.DataFrame, line_width: float, dist: float,
         df2 = df.copy()
         df2 = df2[(df2["sy"]==0) & (df2["ly"]==0)]
         df2 = df2.sort_values(by="sx", ascending=True)
-        if N == 256:
-            list_inflection = [(i * dist + interface_length \
-                for i in range(df2[df2["dz"] == layer].shape[0])) for layer in range(4)]
-        elif N == 512:
-            list_inflection = []
-            for layer in range(4):
-                i = 0
-                indexes = set()
-                list_inflection += [[]]
-                for row in df2[df2["dz"] == layer].iterrows():
-                    idx1, idx2 = int(row[1]['index1'] - 32), int(row[1]['index2'] - 32)
-                    if idx1 not in indexes:
-                        indexes.add(idx1)
-                    for i, w in enumerate(WGysets[layer]):
-                        if idx2 >= w.rEnd[-1] and \
-                          noCross(idx2, idx1, i, \
-                          lx=row[1]['lx'], ly=row[1]['ly'], WGyset=WGysets[layer]):
-                            w.WGs.append(row[0])
-                            w.rEnd.append(idx1)
-                            w.lEnd.append(idx2)
-                            nodes.MTbelow[idx1].y[nodes.MTbelow[idx1].x.index(row[1]['sx'])] = w.y
-                            nodes.MTbelow[idx2].y[nodes.MTbelow[idx2].x.index(row[1]['lx'])] = w.y
-                            list_inflection[layer] += [w.y]
-                            break
+
+        list_inflection = []
+        for layer in range(4):
+            i = 0
+            indexes = set()
+            list_inflection += [[]]
+            for row in df2[df2["dz"] == layer].iterrows():
+                # TODO: 16 is a magic number
+                idx1, idx2 = int(row[1]['index1'] - N/16), int(row[1]['index2'] - N/16)
+                if idx1 not in indexes:
+                    indexes.add(idx1)
+                for i, w in enumerate(WGysets[layer]):
+                    if idx2 >= w.rEnd[-1] and \
+                        noCross(idx2, idx1, i, \
+                        lx=row[1]['lx'], ly=row[1]['ly'], WGyset=WGysets[layer]):
+                        w.WGs.append(row[0])
+                        w.rEnd.append(idx1)
+                        w.lEnd.append(idx2)
+                        nodes.MTbelow[idx1].y[nodes.MTbelow[idx1].x.index(row[1]['sx'])] = w.y
+                        nodes.MTbelow[idx2].y[nodes.MTbelow[idx2].x.index(row[1]['lx'])] = w.y
+                        list_inflection[layer] += [w.y]
+                        break
 
         it = [iter(list_inflection[i]) for i in range(4)]
         df2['inflection'] = df2.apply(lambda x: next(it[int(x.dz)]), axis=1)
@@ -191,31 +193,27 @@ def plotter_rect(df: pd.DataFrame, line_width: float, dist: float,
         df4 = df4[(df4["sy"]!=0) & (df4["ly"]!=0)]
         df4 = df4.sort_values(by="sx", ascending=True)
 
-        if N == 256:
-            list_inflection = [(height - (i * dist + interface_length) \
-                for i in range(df4[df4["dz"] == layer].shape[0])) for layer in range(4)]
-        elif N == 512:
-            list_inflection = []
-            for layer in range(4):
-                i = 0
-                indexes = set()
-                list_inflection += [[]]
-                for row in df4[df4["dz"] == layer].iterrows():
-                    idx1, idx2 = int(row[1]['index1']), int(row[1]['index2'])
-                    if idx1 not in indexes:
-                        indexes.add(idx1)
-                    for i, w in reversed(list(enumerate(WGysets[layer]))):
-                        if idx2 >= w.rEnd[-1] and \
-                           noCross(idx2, idx1, i, \
-                                   lx=row[1]['lx'], ly=row[1]['ly'], \
-                                   WGyset=WGysets[layer], _type='above'):
-                            w.WGs.append(row[0])
-                            w.rEnd.append(idx1)
-                            w.lEnd.append(idx2)
-                            nodes.MTabove[idx1].y[nodes.MTabove[idx1].x.index(row[1]['sx'])] = w.y
-                            nodes.MTabove[idx2].y[nodes.MTabove[idx2].x.index(row[1]['lx'])] = w.y
-                            list_inflection[layer] += [w.y]
-                            break
+        list_inflection = []
+        for layer in range(4):
+            i = 0
+            indexes = set()
+            list_inflection += [[]]
+            for row in df4[df4["dz"] == layer].iterrows():
+                idx1, idx2 = int(row[1]['index1']), int(row[1]['index2'])
+                if idx1 not in indexes:
+                    indexes.add(idx1)
+                for i, w in reversed(list(enumerate(WGysets[layer]))):
+                    if idx2 >= w.rEnd[-1] and \
+                        noCross(idx2, idx1, i, \
+                                lx=row[1]['lx'], ly=row[1]['ly'], \
+                                WGyset=WGysets[layer], _type='above'):
+                        w.WGs.append(row[0])
+                        w.rEnd.append(idx1)
+                        w.lEnd.append(idx2)
+                        nodes.MTabove[idx1].y[nodes.MTabove[idx1].x.index(row[1]['sx'])] = w.y
+                        nodes.MTabove[idx2].y[nodes.MTabove[idx2].x.index(row[1]['lx'])] = w.y
+                        list_inflection[layer] += [w.y]
+                        break
         
         it = [iter(list_inflection[i]) for i in range(4)]
         df4['inflection'] = df4.apply(lambda x: next(it[int(x.dz)], height - 1), axis=1)
@@ -291,7 +289,8 @@ def plotter_rect(df: pd.DataFrame, line_width: float, dist: float,
             indexes = set()
             list_inflection += [[]]
             for row in df3[df3["dz"] == layer].iterrows():
-                idx1, idx2 = int(row[1]['index1'] - 32), int(row[1]['index2'])
+                # TODO:16 is a magic number here
+                idx1, idx2 = int(row[1]['index1'] - N/16), int(row[1]['index2'])
                 if idx1 not in indexes:
                     indexes.add(idx1)
                     gap = 1
@@ -302,7 +301,6 @@ def plotter_rect(df: pd.DataFrame, line_width: float, dist: float,
                        noCross(idx2, idx1, i, \
                                lx=row[1]['sx'], ly=row[1]['sy'], \
                                WGyset=WGysets[layer], _type='below2above'):
-                    # if not w.WGs and noCross(row[1]['index2']+32, row[1]['index1'], i, WGysets[layer], 'below2above'):
                         w.WGs.append(row[0])
                         w.rEnd.append(idx1)
                         w.lEnd.append(idx2)
@@ -343,8 +341,8 @@ def plotter_rect(df: pd.DataFrame, line_width: float, dist: float,
             indexes = set()
             list_inflection += [[]]
             for row in df5[df5["dz"] == layer].iterrows():
-                # TODO:32 is a magic number here
-                idx1, idx2 = int(row[1]['index1']), int(row[1]['index2'] - 32)
+                # TODO:16 is a magic number here
+                idx1, idx2 = int(row[1]['index1']), int(row[1]['index2'] - N/16)
                 if idx1 not in indexes:
                     indexes.add(idx1)
                 for i, w in enumerate(WGysets[layer]):
