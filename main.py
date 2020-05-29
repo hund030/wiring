@@ -5,7 +5,7 @@ from wiring_bend_826 import plotter_bend, svg2gds_bend
 from waveguide_calculator import calc_index, draw_chart
 # Demands
 # channels count
-N = 256
+N = 512
 # save folder
 SaveFolder = "./results/"
 Src = "./fiberBoard" + str(N) + ".xlsx"
@@ -13,13 +13,13 @@ SimSpace = SaveFolder + "fiberBoard" +str(N) + "rect.xlsx"
 # the width of the fibers, unit: mm
 Line_Width = 0.05
 # the minimal Distance between parallel lines, unit: mm
-Dist = 0.250
+Dist = 0.125
 # minimal bend radius, unit: mm
-Bend_Radius = 10
+Bend_Radius = 5
 # bend.svg accuracy, unit: mm
 Delta_Arc = 0.001
 # mm
-height = 150
+height = 200
 width = 150
 
 def main() -> None:

@@ -4,7 +4,7 @@ import numpy as np
 from dataclasses import dataclass, field
 from typing import List
 
-interface_length = 10
+interface_length = 5
 
 @dataclass
 class WGyset:
@@ -60,7 +60,7 @@ def plotter_rect(df: pd.DataFrame, line_width: float, dist: float,
     def noCross(lEnd, rEnd, i, WGyset, _type='below', lx=0, ly=0, boundary=0):
         #TODO: 6 and 8 are magic numbers here
         if _type == 'below':
-            for j in range(1,max(ln_calc(lx, ly) - sn_calc(lEnd+1, WGyset[i].y), 4)):
+            for j in range(1,8):
                 if i >= j and WGyset[i - j].WGs and WGyset[i - j].rEnd[-1] < rEnd and WGyset[i - j].lEnd[-1] < lEnd:
                     return False
                 elif i >= j and len(WGyset[i - j].rEnd) > 2 and WGyset[i - j].rEnd[-2] < lEnd:
@@ -69,14 +69,14 @@ def plotter_rect(df: pd.DataFrame, line_width: float, dist: float,
                 if i+j<len(WGyset) and WGyset[i+j].WGs and WGyset[i + j].rEnd[-1] > lEnd:
                     return False
         elif _type == 'above2below':
-            for j in range(1, max(ln_calc(lx, ly) - sn_calc(lEnd+1, WGyset[i].y), 3)):
+            for j in range(1,8):
                 if i>=j and WGyset[i-j].WGs and WGyset[i - j].lEnd[-1] < lEnd:
                     return False
-            for j in range(1,6):
+            for j in range(1,8):
                 if i+j<len(WGyset) and WGyset[i+j].WGs and WGyset[i + j].rEnd[-1] > lEnd:
                     return False
         elif _type == 'above':
-            for j in range(1,max(ln_calc(lx, ly) - sn_calc(lEnd+1, WGyset[i].y, False), 4)):
+            for j in range(1,8):
                 if i + j < len(WGyset) and WGyset[i + j].WGs and WGyset[i + j].rEnd[-1] != rEnd:
                     return False
                 elif i + j < len(WGyset) and len(WGyset[i + j].rEnd) > 1 and WGyset[i+j].rEnd[-2] > lEnd:
@@ -85,10 +85,10 @@ def plotter_rect(df: pd.DataFrame, line_width: float, dist: float,
                 if i>=j and WGyset[i-j].WGs and WGyset[i - j].rEnd[-1] > lEnd:
                     return False
         elif _type == 'below2above':
-            for j in range(1,6):
+            for j in range(1,8):
                 if i>=j and WGyset[i-j].WGs and WGyset[i - j].rEnd[-1] > lEnd:
                     return False
-            for j in range(1,max(ln_calc(lx, ly) - sn_calc(lEnd+1, WGyset[i].y, False), 3)):
+            for j in range(1,8):
                 if i + j < len(WGyset) and WGyset[i + j].WGs and WGyset[i+j].rEnd[-1] > rEnd:
                     return False
         return True
