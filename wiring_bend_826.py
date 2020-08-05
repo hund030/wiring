@@ -196,7 +196,7 @@ def plotter_bend(df_rect: pd.DataFrame,
             theta_list = [calc_theta(dx, d) if dx<bend_radius*2 and dx!=0 else theta_map[dir_map.index(d)] for d in dir_list]
             j = 0
             for k in range(int(len(x_list) / 2)):
-                ax.plot(x_list[j:j + 2], y_list[j:j + 2], color=color[layer], linewidth=line_width, alpha=1.0)
+                ax.plot(x_list[j:j + 2], y_list[j:j + 2], color=color[layer], linewidth=0.2, alpha=1.0)
                 # data_linewidth_plot(x_list[j:j + 2], y_list[j:j + 2], ax=ax, color=color[layer], linewidth=line_width, alpha=1.0)
                 j = j + 2
             for k in range(int(len(center_list))):
@@ -204,15 +204,15 @@ def plotter_bend(df_rect: pd.DataFrame,
                     center_list[k][0] + bend_radius * np.cos(np.arange(theta_list[k][0], theta_list[k][1], delta_arc)))
                 arc_y_list = list(
                     center_list[k][1] + bend_radius * np.sin(np.arange(theta_list[k][0], theta_list[k][1], delta_arc)))
-                ax.plot(arc_x_list, arc_y_list, color=color[layer], linewidth=line_width, alpha=1.0)
+                ax.plot(arc_x_list, arc_y_list, color=color[layer], linewidth=0.2, alpha=1.0)
                 # data_linewidth_plot(arc_x_list, arc_y_list, ax=ax, color=color[layer], linewidth=line_width, alpha=1.0)
     plt.axis('scaled')
 
     df["theta"] = df.apply(lambda x: [calc_theta(x.dx, d) if x.dx<bend_radius*2 and x.dx!=0 else theta_map[dir_map.index(d)] for d in x.dir], axis=1)
     print("******** Output Routed waveguides to svg file and pdf file ********")
     # fig.savefig(save_folder+file_name+'.svg', dpi=3000, format='svg')
-    # fig.savefig(save_folder+file_name+'.png', dpi=3000, format='png')
-    fig.savefig(save_folder+file_name+'.pdf', dpi=3000, format='pdf')
+    fig.savefig(save_folder+'/'+file_name+'.png', dpi=150, format='png')
+    fig.savefig(save_folder+'/'+file_name+'.pdf', dpi=3000, format='pdf')
 
     df.to_excel(save_folder + file_name + ".xlsx")
 

@@ -4,7 +4,7 @@ import numpy as np
 from dataclasses import dataclass, field
 from typing import List
 
-interface_length = 10
+interface_length = 5
 
 @dataclass
 class WGyset:
