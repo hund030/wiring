@@ -15,4 +15,4 @@ The [`fiberBoard896rect.dwg`](./results/fiberBoard896rect.dwg) is converted from
 The [`fiberBoard896bend.dxf`](./results/fiberBoard896bend.dxf) is converted from [`fiberBoard896bend.gds`](./results/fiberBoard896bend.gds) by LinkCAD 5.
 
 ## Docs
-See [`wiring896intro.pptx`](./wiring896intro.pptx). If there are any errors in this notes, please contact me by kuangwj@sjtu.edu.cn.
+See [`wiring896intro.pptx`](./wiring896intro.pptx). If there are any errors in this notes, please contact me by hd00300@sjtu.edu.cn
